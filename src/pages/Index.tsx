@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import { FileUpload } from "@/components/FileUpload";
 import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
@@ -22,24 +23,51 @@ const Index = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const handleFileUpload = (file: File, table: "A" | "B") => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result) => {
-        if (table === "A") {
-          setTableA(result.data);
-          setFileNameA(file.name);
-          toast.success(`Table A loaded: ${result.data.length} rows`);
-        } else {
-          setTableB(result.data);
-          setFileNameB(file.name);
-          toast.success(`Table B loaded: ${result.data.length} rows`);
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+    
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+          
+          if (table === "A") {
+            setTableA(jsonData);
+            setFileNameA(file.name);
+            toast.success(`Table A loaded: ${jsonData.length} rows`);
+          } else {
+            setTableB(jsonData);
+            setFileNameB(file.name);
+            toast.success(`Table B loaded: ${jsonData.length} rows`);
+          }
+        } catch (error: any) {
+          toast.error(`Error parsing Excel: ${error.message}`);
         }
-      },
-      error: (error) => {
-        toast.error(`Error parsing CSV: ${error.message}`);
-      },
-    });
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (result) => {
+          if (table === "A") {
+            setTableA(result.data);
+            setFileNameA(file.name);
+            toast.success(`Table A loaded: ${result.data.length} rows`);
+          } else {
+            setTableB(result.data);
+            setFileNameB(file.name);
+            toast.success(`Table B loaded: ${result.data.length} rows`);
+          }
+        },
+        error: (error) => {
+          toast.error(`Error parsing CSV: ${error.message}`);
+        },
+      });
+    }
   };
 
   const handleSingleLookup = (value: string) => {
@@ -146,7 +174,7 @@ const Index = () => {
             VLOOKUP Web App
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Excel's VLOOKUP function in your browser. Upload CSVs, match columns, and merge data instantly.
+            Excel's VLOOKUP function in your browser. Upload CSV or Excel files, match columns, and merge data instantly.
           </p>
         </div>
 

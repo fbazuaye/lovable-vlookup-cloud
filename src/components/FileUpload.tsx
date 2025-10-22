@@ -12,7 +12,10 @@ export const FileUpload = ({ onFileUpload, label, fileName }: FileUploadProps) =
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       const file = e.dataTransfer.files[0];
-      if (file && file.type === "text/csv") {
+      if (file && (file.type === "text/csv" || 
+          file.name.endsWith('.xlsx') || 
+          file.name.endsWith('.xls') || 
+          file.name.endsWith('.csv'))) {
         onFileUpload(file);
       }
     },
@@ -34,7 +37,7 @@ export const FileUpload = ({ onFileUpload, label, fileName }: FileUploadProps) =
     >
       <input
         type="file"
-        accept=".csv"
+        accept=".csv,.xlsx,.xls"
         onChange={handleChange}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
