@@ -1,0 +1,4 @@
+project_id = "lnqvzxhjstbhnclkhcdu"
+
+[functions.suggest-columns]
+verify_jwt = false
