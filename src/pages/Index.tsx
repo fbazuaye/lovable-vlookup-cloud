@@ -6,8 +6,9 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, Database } from "lucide-react";
+import { Download, Database, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -177,6 +178,42 @@ const Index = () => {
             Excel's VLOOKUP function in your browser. Upload CSV or Excel files, match columns, and merge data instantly.
           </p>
         </div>
+
+        {/* Instructions Section */}
+        <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
+          <div className="flex items-start gap-3">
+            <InfoIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-foreground mb-3">How to Use VLOOKUP</h3>
+              <ol className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="font-semibold text-primary">1.</span>
+                  <span>Upload two files (CSV or Excel) - Table A contains values you want to look up, Table B contains reference data</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-primary">2.</span>
+                  <span>Select the lookup column from Table A (the value you are searching for)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-primary">3.</span>
+                  <span>Select the match column from Table B (where to find matching values)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-primary">4.</span>
+                  <span>Select the return column from Table B (the data you want to retrieve)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-primary">5.</span>
+                  <span>Click "AI Suggest" for automatic column matching, or perform a single lookup or bulk lookup</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-primary">6.</span>
+                  <span>Export your results as CSV when ready</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </Card>
 
         {/* File Upload Section */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
