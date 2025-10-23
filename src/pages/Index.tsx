@@ -310,6 +310,13 @@ const Index = () => {
           </div>
         )}
       </div>
+      
+      {/* Footer */}
+      <footer className="mt-16 pb-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          Designed By Frank Bazuaye | Powered By LiveGig Ltd
+        </p>
+      </footer>
     </div>
   );
 };
