@@ -23,52 +23,85 @@ const Index = () => {
   const [results, setResults] = useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
+  const normalizeRows = (rows: any[]): any[] => {
+    if (!Array.isArray(rows)) return [];
+
+    return rows
+      .filter((row) => row && typeof row === "object" && !Array.isArray(row))
+      .map((row) => {
+        const normalizedRow: Record<string, any> = {};
+        const usedHeaders = new Set<string>();
+
+        Object.entries(row).forEach(([rawHeader, value], index) => {
+          if (rawHeader === "__parsed_extra") return;
+
+          const baseHeader = String(rawHeader ?? "").trim() || `Column ${index + 1}`;
+          let finalHeader = baseHeader;
+          let duplicateCounter = 2;
+
+          while (usedHeaders.has(finalHeader)) {
+            finalHeader = `${baseHeader} (${duplicateCounter})`;
+            duplicateCounter += 1;
+          }
+
+          usedHeaders.add(finalHeader);
+          normalizedRow[finalHeader] = value;
+        });
+
+        return normalizedRow;
+      })
+      .filter((row) => Object.keys(row).length > 0);
+  };
+
+  const applyUploadedData = (rows: any[], fileName: string, table: "A" | "B") => {
+    const normalizedData = normalizeRows(rows);
+
+    if (normalizedData.length === 0) {
+      toast.error("No valid rows found in this file");
+      return;
+    }
+
+    if (table === "A") {
+      setTableA(normalizedData);
+      setFileNameA(fileName);
+      toast.success(`Table A loaded: ${normalizedData.length} rows`);
+    } else {
+      setTableB(normalizedData);
+      setFileNameB(fileName);
+      toast.success(`Table B loaded: ${normalizedData.length} rows`);
+    }
+  };
+
   const handleFileUpload = (file: File, table: "A" | "B") => {
-    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-    
+    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+
     if (isExcel) {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: "array" });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-          
-          if (table === "A") {
-            setTableA(jsonData);
-            setFileNameA(file.name);
-            toast.success(`Table A loaded: ${jsonData.length} rows`);
-          } else {
-            setTableB(jsonData);
-            setFileNameB(file.name);
-            toast.success(`Table B loaded: ${jsonData.length} rows`);
-          }
+          applyUploadedData(jsonData, file.name, table);
         } catch (error: any) {
           toast.error(`Error parsing Excel: ${error.message}`);
         }
       };
       reader.readAsArrayBuffer(file);
-    } else {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (result) => {
-          if (table === "A") {
-            setTableA(result.data);
-            setFileNameA(file.name);
-            toast.success(`Table A loaded: ${result.data.length} rows`);
-          } else {
-            setTableB(result.data);
-            setFileNameB(file.name);
-            toast.success(`Table B loaded: ${result.data.length} rows`);
-          }
-        },
-        error: (error) => {
-          toast.error(`Error parsing CSV: ${error.message}`);
-        },
-      });
+      return;
     }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+        applyUploadedData(result.data as any[], file.name, table);
+      },
+      error: (error) => {
+        toast.error(`Error parsing CSV: ${error.message}`);
+      },
+    });
   };
 
   const handleSingleLookup = (value: string) => {
