@@ -27,6 +27,8 @@ export const FileUpload = ({ onFileUpload, label, fileName }: FileUploadProps) =
     if (file) {
       onFileUpload(file);
     }
+    // Reset so the same or different file can be selected again
+    e.target.value = "";
   };
 
   return (
