@@ -41,6 +41,13 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
+// Pre-cache offline fallback page
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("offline-fallback").then((cache) => cache.add(OFFLINE_FALLBACK))
+  );
+});
+
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL("index.html"), {
     denylist: [/^\/~oauth/],
