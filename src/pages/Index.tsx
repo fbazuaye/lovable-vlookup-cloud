@@ -13,6 +13,32 @@ import { Card } from "@/components/ui/card";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
 import { supabase } from "@/integrations/supabase/client";
 
+const InstallButton = () => {
+  const { canInstall, isInstalled, install } = useInstallPrompt();
+
+  if (isInstalled) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
+        <Smartphone className="h-3.5 w-3.5" /> Installed
+      </span>
+    );
+  }
+
+  if (!canInstall) return null;
+
+  return (
+    <Button
+      onClick={install}
+      variant="outline"
+      size="sm"
+      className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+    >
+      <Smartphone className="h-4 w-4" />
+      Install App
+    </Button>
+  );
+};
+
 const Index = () => {
   const [tableA, setTableA] = useState<any[]>([]);
   const [tableB, setTableB] = useState<any[]>([]);
