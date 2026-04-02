@@ -6,8 +6,9 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, Database, InfoIcon, Smartphone, Share, X } from "lucide-react";
+import { Download, Database, InfoIcon, Smartphone, Share, X, Sun, Moon } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
+import { useTheme } from "@/hooks/use-theme";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
@@ -105,6 +106,7 @@ const Index = () => {
   const [returnColumn, setReturnColumn] = useState<string>("");
   const [results, setResults] = useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const { theme, toggle } = useTheme();
 
   const normalizeRows = (rows: any[]): any[] => {
     if (!Array.isArray(rows)) return [];
@@ -282,6 +284,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={toggle}
+            className="p-2 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-primary to-primary-light rounded-2xl mb-4 shadow-medium">
