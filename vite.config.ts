@@ -13,14 +13,23 @@ const pwaManifest = {
   theme_color: "#2539d0",
   background_color: "#f8f8fa",
   display: "standalone",
-  display_override: ["window-controls-overlay", "standalone", "minimal-ui"],
+  display_override: ["window-controls-overlay", "tabbed", "standalone", "minimal-ui"],
   orientation: "any",
   scope: "/",
   start_url: "/",
   lang: "en",
   dir: "ltr",
   prefer_related_applications: false,
-  related_applications: [] as unknown[],
+  related_applications: [
+    {
+      platform: "webapp",
+      url: "https://lovable-vlookup-cloud.lovable.app/manifest.webmanifest",
+    },
+  ] as unknown[],
+  iarc_rating_id: "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  scope_extensions: [
+    { origin: "*.lovable.app" },
+  ],
   categories: ["productivity", "utilities"],
   launch_handler: {
     client_mode: "navigate-existing",
