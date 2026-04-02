@@ -3,9 +3,9 @@
 import { clientsClaim } from "workbox-core";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
-import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching";
-import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
+import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
+import { NavigationRoute, registerRoute, setCatchHandler } from "workbox-routing";
+import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis & {
   __WB_MANIFEST: Array<{
@@ -34,41 +34,50 @@ const APP_SHELL_URLS = ["/", "/manifest.webmanifest"];
 const REFRESH_CACHE_NAME = "vlookup-fresh-content";
 const NOTIFICATION_ICON = "/pwa-icon-192.png";
 const OFFLINE_FALLBACK = "/offline.html";
+const CACHE_NAME = "offline-fallback";
 
 self.skipWaiting();
 clientsClaim();
 
+// Precache all build assets (injected by vite-plugin-pwa)
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-// Pre-cache offline fallback page
+// Cache the offline fallback page on install
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open("offline-fallback").then((cache) => cache.add(OFFLINE_FALLBACK))
+    caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_FALLBACK))
   );
 });
 
-// Navigation route with offline fallback
-const navigationHandler = createHandlerBoundToURL("index.html");
-const navigationRoute = new NavigationRoute(navigationHandler, {
+// Navigation: NetworkFirst so the app works offline from precache,
+// with an explicit offline fallback if nothing is cached.
+const navigationStrategy = new NetworkFirst({
+  cacheName: "navigation-cache",
+  plugins: [
+    new CacheableResponsePlugin({ statuses: [0, 200] }),
+  ],
+});
+
+const navigationRoute = new NavigationRoute(navigationStrategy, {
   denylist: [/^\/~oauth/],
 });
 registerRoute(navigationRoute);
 
-// Catch navigation failures and serve offline page
+// Static assets (same-origin): StaleWhileRevalidate
 registerRoute(
-  ({ request }) => request.mode === "navigate",
-  async ({ event }) => {
-    try {
-      return await navigationHandler.handle({ event, request: (event as FetchEvent).request });
-    } catch {
-      const cache = await caches.open("offline-fallback");
-      const cached = await cache.match(OFFLINE_FALLBACK);
-      return cached || Response.error();
-    }
-  },
+  ({ request, sameOrigin }) =>
+    sameOrigin && ["style", "script", "image", "font", "worker"].includes(request.destination),
+  new StaleWhileRevalidate({
+    cacheName: "app-static-assets",
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({ maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+    ],
+  }),
 );
 
+// Google Fonts
 registerRoute(
   /^https:\/\/fonts\.googleapis\.com\/.*/i,
   new CacheFirst({
@@ -93,26 +102,25 @@ registerRoute(
   "GET",
 );
 
-registerRoute(
-  ({ request, sameOrigin }) =>
-    sameOrigin && ["style", "script", "image", "font", "worker"].includes(request.destination),
-  new StaleWhileRevalidate({
-    cacheName: "app-static-assets",
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 }),
-    ],
-  }),
-);
+// Global catch handler — when any route fails and nothing is cached,
+// serve the offline fallback for navigation requests.
+setCatchHandler(async ({ request }) => {
+  if (request.mode === "navigate") {
+    const cache = await caches.open(CACHE_NAME);
+    const fallback = await cache.match(OFFLINE_FALLBACK);
+    if (fallback) return fallback;
+  }
+  return Response.error();
+});
+
+// --- Background capabilities ---
 
 const refreshCoreContent = async () => {
   const cache = await caches.open(REFRESH_CACHE_NAME);
-
   await Promise.all(
     APP_SHELL_URLS.map(async (url) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
-
         if (response.ok) {
           await cache.put(url, response.clone());
         }
@@ -131,7 +139,6 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("sync", (event: Event) => {
   const syncEvent = event as SyncLikeEvent;
-
   if (syncEvent.tag === "refresh-app-content") {
     syncEvent.waitUntil(refreshCoreContent());
   }
@@ -139,7 +146,6 @@ self.addEventListener("sync", (event: Event) => {
 
 self.addEventListener("periodicsync", (event: Event) => {
   const periodicSyncEvent = event as SyncLikeEvent;
-
   if (!periodicSyncEvent.tag || periodicSyncEvent.tag === "refresh-app-content") {
     periodicSyncEvent.waitUntil(refreshCoreContent());
   }
@@ -188,31 +194,7 @@ self.addEventListener("notificationclick", (event: Event) => {
           return client.focus();
         }
       }
-
       return self.clients.openWindow(targetUrl);
-    }),
-  );
-});
-
-// Explicit fetch handler for offline support — serves cached assets when network is unavailable
-self.addEventListener("fetch", (event: FetchEvent) => {
-  // Let Workbox-registered routes handle their own requests;
-  // this catch-all only applies to requests that fall through.
-  if (event.request.method !== "GET") return;
-
-  event.respondWith(
-    fetch(event.request).catch(async () => {
-      const cached = await caches.match(event.request);
-      if (cached) return cached;
-
-      // For navigation requests, serve offline fallback
-      if (event.request.mode === "navigate") {
-        const offlineCache = await caches.open("offline-fallback");
-        const offlinePage = await offlineCache.match(OFFLINE_FALLBACK);
-        if (offlinePage) return offlinePage;
-      }
-
-      return Response.error();
     }),
   );
 });
