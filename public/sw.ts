@@ -193,3 +193,26 @@ self.addEventListener("notificationclick", (event: Event) => {
     }),
   );
 });
+
+// Explicit fetch handler for offline support — serves cached assets when network is unavailable
+self.addEventListener("fetch", (event: FetchEvent) => {
+  // Let Workbox-registered routes handle their own requests;
+  // this catch-all only applies to requests that fall through.
+  if (event.request.method !== "GET") return;
+
+  event.respondWith(
+    fetch(event.request).catch(async () => {
+      const cached = await caches.match(event.request);
+      if (cached) return cached;
+
+      // For navigation requests, serve offline fallback
+      if (event.request.mode === "navigate") {
+        const offlineCache = await caches.open("offline-fallback");
+        const offlinePage = await offlineCache.match(OFFLINE_FALLBACK);
+        if (offlinePage) return offlinePage;
+      }
+
+      return Response.error();
+    }),
+  );
+});
