@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ["pwa-icon-192.png", "pwa-icon-512.png", "placeholder.svg"],
       manifest: {
+        id: "/",
         name: "VLOOKUP Web App",
         short_name: "VLOOKUP",
         description: "Free browser-based VLOOKUP tool that replicates Excel's VLOOKUP function. Upload CSVs, match columns, merge data, and export results instantly.",
@@ -52,23 +53,44 @@ export default defineConfig(({ mode }) => ({
         orientation: "any",
         scope: "/",
         start_url: "/",
+        lang: "en",
+        dir: "ltr",
+        prefer_related_applications: false,
         categories: ["productivity", "utilities"],
         icons: [
           {
             src: "pwa-icon-192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
+          },
+        ],
+        screenshots: [
+          {
+            src: "screenshot-wide.png",
+            sizes: "1280x720",
+            type: "image/png",
+            form_factor: "wide",
+            label: "VLOOKUP Web App Desktop View",
+          },
+          {
+            src: "screenshot-narrow.png",
+            sizes: "512x844",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "VLOOKUP Web App Mobile View",
           },
         ],
       },
