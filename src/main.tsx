@@ -2,11 +2,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// PWA: Unregister service workers in preview/iframe contexts
 const isInIframe = (() => {
   try {
     return window.self !== window.top;
-  } catch (e) {
+  } catch {
     return true;
   }
 })();
@@ -17,17 +16,12 @@ const isPreviewHost =
 
 if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((registrations) => {
-    registrations.forEach((r) => r.unregister());
+    registrations.forEach((registration) => registration.unregister());
   });
-} else {
-  // Explicitly register the service worker in production
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-        // SW registration failed silently
-      });
-    });
-  }
+} else if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+    // Ignore registration failures in unsupported crawler contexts.
+  });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
