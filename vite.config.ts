@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "script",
       devOptions: {
         enabled: false,
       },
@@ -50,7 +51,7 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#2539d0",
         background_color: "#f8f8fa",
         display: "standalone",
-        display_override: ["standalone", "minimal-ui"],
+        display_override: ["window-controls-overlay", "standalone", "minimal-ui"],
         orientation: "any",
         scope: "/",
         start_url: "/",
@@ -62,6 +63,26 @@ export default defineConfig(({ mode }) => ({
         launch_handler: {
           client_mode: "navigate-existing",
         },
+        handle_links: "preferred",
+        edge_side_panel: {
+          preferred_width: 480,
+        },
+        file_handlers: [
+          {
+            action: "/",
+            accept: {
+              "text/csv": [".csv"],
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+              "application/vnd.ms-excel": [".xls"],
+            },
+          },
+        ],
+        protocol_handlers: [
+          {
+            protocol: "web+vlookup",
+            url: "/?url=%s",
+          },
+        ],
         shortcuts: [
           {
             name: "New Lookup",
