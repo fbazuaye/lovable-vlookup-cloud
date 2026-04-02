@@ -50,13 +50,36 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#2539d0",
         background_color: "#f8f8fa",
         display: "standalone",
+        display_override: ["standalone", "minimal-ui"],
         orientation: "any",
         scope: "/",
         start_url: "/",
         lang: "en",
         dir: "ltr",
         prefer_related_applications: false,
+        related_applications: [],
         categories: ["productivity", "utilities"],
+        launch_handler: {
+          client_mode: "navigate-existing",
+        },
+        shortcuts: [
+          {
+            name: "New Lookup",
+            short_name: "Lookup",
+            url: "/",
+            description: "Start a new VLOOKUP operation",
+            icons: [{ src: "pwa-icon-192.png", sizes: "192x192" }],
+          },
+        ],
+        share_target: {
+          action: "/",
+          method: "GET",
+          params: {
+            title: "title",
+            text: "text",
+            url: "url",
+          },
+        },
         icons: [
           {
             src: "pwa-icon-192.png",
