@@ -87,7 +87,7 @@ export default defineConfig(({ mode }) => ({
           },
           {
             src: "screenshot-narrow.png",
-            sizes: "390x844",
+            sizes: "512x844",
             type: "image/png",
             form_factor: "narrow",
             label: "VLOOKUP Web App Mobile View",
