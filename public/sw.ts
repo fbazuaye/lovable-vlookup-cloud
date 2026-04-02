@@ -48,10 +48,25 @@ self.addEventListener("install", (event) => {
   );
 });
 
+// Navigation route with offline fallback
+const navigationHandler = createHandlerBoundToURL("index.html");
+const navigationRoute = new NavigationRoute(navigationHandler, {
+  denylist: [/^\/~oauth/],
+});
+registerRoute(navigationRoute);
+
+// Catch navigation failures and serve offline page
 registerRoute(
-  new NavigationRoute(createHandlerBoundToURL("index.html"), {
-    denylist: [/^\/~oauth/],
-  }),
+  ({ request }) => request.mode === "navigate",
+  async ({ event }) => {
+    try {
+      return await navigationHandler.handle({ event, request: (event as FetchEvent).request });
+    } catch {
+      const cache = await caches.open("offline-fallback");
+      const cached = await cache.match(OFFLINE_FALLBACK);
+      return cached || Response.error();
+    }
+  },
 );
 
 registerRoute(
