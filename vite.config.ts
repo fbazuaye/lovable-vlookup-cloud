@@ -84,6 +84,35 @@ export default defineConfig(({ mode }) => ({
             url: "/?url=%s",
           },
         ],
+        widgets: [
+          {
+            name: "VLOOKUP Quick Lookup",
+            description: "Quick lookup widget for VLOOKUP Web App",
+            tag: "vlookup-widget",
+            ms_ac_template: "widget/template",
+            screenshots: [
+              {
+                src: "screenshot-wide.png",
+                sizes: "1280x720",
+                label: "VLOOKUP Widget",
+              },
+            ],
+            icons: [
+              { src: "pwa-icon-192.png", sizes: "192x192" },
+            ],
+          },
+        ],
+        tabbed_display: {
+          tab_strip: {
+            home_tab: {
+              url: "/",
+              icons: [{ src: "pwa-icon-192.png", sizes: "192x192" }],
+            },
+          },
+        },
+        note_taking: {
+          new_note_url: "/",
+        },
         shortcuts: [
           {
             name: "New Lookup",
