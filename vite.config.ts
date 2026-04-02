@@ -45,6 +45,8 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ["pwa-icon-192.png", "pwa-icon-512.png", "placeholder.svg"],
       manifest: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(({
         id: "/",
         name: "VLOOKUP Web App",
         short_name: "VLOOKUP",
