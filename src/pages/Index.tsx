@@ -6,11 +6,38 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, Database, InfoIcon } from "lucide-react";
+import { Download, Database, InfoIcon, Smartphone } from "lucide-react";
+import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
 import { supabase } from "@/integrations/supabase/client";
+
+const InstallButton = () => {
+  const { canInstall, isInstalled, install } = useInstallPrompt();
+
+  if (isInstalled) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
+        <Smartphone className="h-3.5 w-3.5" /> Installed
+      </span>
+    );
+  }
+
+  if (!canInstall) return null;
+
+  return (
+    <Button
+      onClick={install}
+      variant="outline"
+      size="sm"
+      className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+    >
+      <Smartphone className="h-4 w-4" />
+      Install App
+    </Button>
+  );
+};
 
 const Index = () => {
   const [tableA, setTableA] = useState<any[]>([]);
@@ -207,9 +234,10 @@ const Index = () => {
           <h1 className="text-4xl font-bold text-foreground mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             VLOOKUP Web App
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Excel's VLOOKUP function in your browser. Upload CSV or Excel files, match columns, and merge data instantly.
           </p>
+          <InstallButton />
         </div>
 
         {/* Instructions Section */}
