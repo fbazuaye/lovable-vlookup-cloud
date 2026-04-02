@@ -3,9 +3,9 @@
 import { clientsClaim } from "workbox-core";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
-import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching";
 import { NavigationRoute, registerRoute, setCatchHandler } from "workbox-routing";
-import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
+import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis & {
   __WB_MANIFEST: Array<{
@@ -34,37 +34,35 @@ const APP_SHELL_URLS = ["/", "/manifest.webmanifest"];
 const REFRESH_CACHE_NAME = "vlookup-fresh-content";
 const NOTIFICATION_ICON = "/pwa-icon-192.png";
 const OFFLINE_FALLBACK = "/offline.html";
-const CACHE_NAME = "offline-fallback";
+const OFFLINE_CACHE = "offline-fallback";
 
+// ── Core setup ──────────────────────────────────────────────────────
 self.skipWaiting();
 clientsClaim();
 
-// Precache all build assets (injected by vite-plugin-pwa)
+// Precache all build assets (injected by vite-plugin-pwa).
+// This includes index.html, all JS/CSS chunks, icons, etc.
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-// Cache the offline fallback page on install
+// Also cache the standalone offline fallback page during install
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_FALLBACK))
+    caches.open(OFFLINE_CACHE).then((cache) => cache.add(OFFLINE_FALLBACK))
   );
 });
 
-// Navigation: NetworkFirst so the app works offline from precache,
-// with an explicit offline fallback if nothing is cached.
-const navigationStrategy = new NetworkFirst({
-  cacheName: "navigation-cache",
-  plugins: [
-    new CacheableResponsePlugin({ statuses: [0, 200] }),
-  ],
-});
-
-const navigationRoute = new NavigationRoute(navigationStrategy, {
-  denylist: [/^\/~oauth/],
-});
+// ── Navigation ──────────────────────────────────────────────────────
+// Serve the precached index.html for all navigation requests.
+// createHandlerBoundToURL reads directly from the precache — no network
+// needed — so the app shell loads instantly even when fully offline.
+const navigationRoute = new NavigationRoute(
+  createHandlerBoundToURL("index.html"),
+  { denylist: [/^\/~oauth/] },
+);
 registerRoute(navigationRoute);
 
-// Static assets (same-origin): StaleWhileRevalidate
+// ── Static assets (same-origin) ─────────────────────────────────────
 registerRoute(
   ({ request, sameOrigin }) =>
     sameOrigin && ["style", "script", "image", "font", "worker"].includes(request.destination),
@@ -77,7 +75,7 @@ registerRoute(
   }),
 );
 
-// Google Fonts
+// ── Google Fonts ────────────────────────────────────────────────────
 registerRoute(
   /^https:\/\/fonts\.googleapis\.com\/.*/i,
   new CacheFirst({
@@ -102,18 +100,19 @@ registerRoute(
   "GET",
 );
 
-// Global catch handler — when any route fails and nothing is cached,
-// serve the offline fallback for navigation requests.
+// ── Global catch handler ────────────────────────────────────────────
+// If every strategy fails (e.g. uncached cross-origin asset while
+// offline), serve the offline fallback for navigation requests.
 setCatchHandler(async ({ request }) => {
   if (request.mode === "navigate") {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(OFFLINE_CACHE);
     const fallback = await cache.match(OFFLINE_FALLBACK);
     if (fallback) return fallback;
   }
   return Response.error();
 });
 
-// --- Background capabilities ---
+// ── Background capabilities ─────────────────────────────────────────
 
 const refreshCoreContent = async () => {
   const cache = await caches.open(REFRESH_CACHE_NAME);
