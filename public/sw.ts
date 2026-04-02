@@ -33,6 +33,7 @@ type NotificationClickLikeEvent = ExtendableEvent & {
 const APP_SHELL_URLS = ["/", "/manifest.webmanifest"];
 const REFRESH_CACHE_NAME = "vlookup-fresh-content";
 const NOTIFICATION_ICON = "/pwa-icon-192.png";
+const OFFLINE_FALLBACK = "/offline.html";
 
 self.skipWaiting();
 clientsClaim();
@@ -40,10 +41,32 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
+// Pre-cache offline fallback page
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("offline-fallback").then((cache) => cache.add(OFFLINE_FALLBACK))
+  );
+});
+
+// Navigation route with offline fallback
+const navigationHandler = createHandlerBoundToURL("index.html");
+const navigationRoute = new NavigationRoute(navigationHandler, {
+  denylist: [/^\/~oauth/],
+});
+registerRoute(navigationRoute);
+
+// Catch navigation failures and serve offline page
 registerRoute(
-  new NavigationRoute(createHandlerBoundToURL("index.html"), {
-    denylist: [/^\/~oauth/],
-  }),
+  ({ request }) => request.mode === "navigate",
+  async ({ event }) => {
+    try {
+      return await navigationHandler.handle({ event, request: (event as FetchEvent).request });
+    } catch {
+      const cache = await caches.open("offline-fallback");
+      const cached = await cache.match(OFFLINE_FALLBACK);
+      return cached || Response.error();
+    }
+  },
 );
 
 registerRoute(
