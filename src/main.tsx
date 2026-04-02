@@ -18,10 +18,6 @@ if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((registrations) => {
     registrations.forEach((registration) => registration.unregister());
   });
-} else if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-    // Ignore registration failures in unsupported crawler contexts.
-  });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
