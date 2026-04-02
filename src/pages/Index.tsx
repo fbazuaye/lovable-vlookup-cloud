@@ -208,9 +208,10 @@ const Index = () => {
           <h1 className="text-4xl font-bold text-foreground mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             VLOOKUP Web App
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Excel's VLOOKUP function in your browser. Upload CSV or Excel files, match columns, and merge data instantly.
           </p>
+          <InstallButton />
         </div>
 
         {/* Instructions Section */}
