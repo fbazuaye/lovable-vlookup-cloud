@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "script",
+      strategies: "generateSW",
       devOptions: {
         enabled: false,
       },

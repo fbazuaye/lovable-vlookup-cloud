@@ -19,6 +19,15 @@ if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((registrations) => {
     registrations.forEach((r) => r.unregister());
   });
+} else {
+  // Explicitly register the service worker in production
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+        // SW registration failed silently
+      });
+    });
+  }
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
