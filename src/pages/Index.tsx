@@ -345,10 +345,13 @@ const Index = () => {
       </div>
       
       {/* Footer */}
-      <footer className="mt-16 pb-8 text-center">
+      <footer className="mt-16 pb-8 text-center space-y-2">
         <p className="text-sm text-muted-foreground">
           Designed By Frank Bazuaye | Powered By LiveGig Ltd
         </p>
+        <a href="/privacy" className="text-xs text-primary hover:underline">
+          Privacy Policy
+        </a>
       </footer>
     </div>
   );
