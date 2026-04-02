@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { FileUpload } from "@/components/FileUpload";
