@@ -175,6 +175,7 @@ export default defineConfig(({ mode }) => ({
       },
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        additionalManifestEntries: [{ url: "/offline.html", revision: "1" }],
       },
       includeAssets: ["pwa-icon-192.png", "pwa-icon-512.png", "placeholder.svg"],
       manifest: pwaManifest as any,
