@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -20,9 +19,6 @@ if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((registrations) => {
     registrations.forEach((r) => r.unregister());
   });
-} else {
-  // Register service worker in production
-  registerSW({ immediate: true });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
