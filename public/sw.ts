@@ -33,6 +33,7 @@ type NotificationClickLikeEvent = ExtendableEvent & {
 const APP_SHELL_URLS = ["/", "/manifest.webmanifest"];
 const REFRESH_CACHE_NAME = "vlookup-fresh-content";
 const NOTIFICATION_ICON = "/pwa-icon-192.png";
+const OFFLINE_FALLBACK = "/offline.html";
 
 self.skipWaiting();
 clientsClaim();
