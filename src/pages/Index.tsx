@@ -283,6 +283,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={toggle}
+            className="p-2 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-primary to-primary-light rounded-2xl mb-4 shadow-medium">
