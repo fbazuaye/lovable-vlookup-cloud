@@ -13,10 +13,39 @@ import { Card } from "@/components/ui/card";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
 import { supabase } from "@/integrations/supabase/client";
 
+const useIsIos = () => {
+  const [isIos, setIsIos] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  useEffect(() => {
+    const ua = window.navigator.userAgent;
+    setIsIos(/iphone|ipad|ipod/i.test(ua));
+    setIsStandalone(
+      "standalone" in window.navigator && (window.navigator as any).standalone === true
+    );
+  }, []);
+  return { isIos, isStandalone };
+};
+
 const InstallButton = () => {
   const { canInstall, isInstalled, install } = useInstallPrompt();
+  const { isIos, isStandalone } = useIsIos();
+  const [showIosBanner, setShowIosBanner] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  if (isInstalled) {
+  useEffect(() => {
+    if (isIos && !isStandalone && !dismissed) {
+      const wasDismissed = sessionStorage.getItem("ios-install-dismissed");
+      if (!wasDismissed) setShowIosBanner(true);
+    }
+  }, [isIos, isStandalone, dismissed]);
+
+  const dismissIos = () => {
+    setShowIosBanner(false);
+    setDismissed(true);
+    sessionStorage.setItem("ios-install-dismissed", "true");
+  };
+
+  if (isInstalled || isStandalone) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
         <Smartphone className="h-3.5 w-3.5" /> Installed
@@ -24,19 +53,46 @@ const InstallButton = () => {
     );
   }
 
-  if (!canInstall) return null;
+  if (canInstall) {
+    return (
+      <Button
+        onClick={install}
+        variant="outline"
+        size="sm"
+        className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+      >
+        <Smartphone className="h-4 w-4" />
+        Install App
+      </Button>
+    );
+  }
 
-  return (
-    <Button
-      onClick={install}
-      variant="outline"
-      size="sm"
-      className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
-    >
-      <Smartphone className="h-4 w-4" />
-      Install App
-    </Button>
-  );
+  if (showIosBanner) {
+    return (
+      <div className="relative w-full max-w-md mx-auto mt-2 rounded-xl border border-primary/20 bg-card p-4 shadow-lg animate-in slide-in-from-bottom-4">
+        <button
+          onClick={dismissIos}
+          className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+          aria-label="Dismiss"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-primary/10 p-2">
+            <Smartphone className="h-5 w-5 text-primary" />
+          </div>
+          <div className="text-left text-sm">
+            <p className="font-semibold text-foreground mb-1">Install VLOOKUP App</p>
+            <p className="text-muted-foreground leading-snug">
+              Tap the <Share className="inline h-4 w-4 -mt-0.5 text-primary" /> <strong>Share</strong> button in Safari, then select <strong>"Add to Home Screen"</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 const Index = () => {
