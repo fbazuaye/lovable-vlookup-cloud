@@ -1,38 +1,36 @@
 
 
-## Plan: Fix PWA Manifest for PWABuilder Store Readiness
+## Plan: Improve PWABuilder Score (25 → Higher)
 
-### What's Needed
+From the screenshot, two main areas need attention:
 
-PWABuilder commonly flags these missing/incorrect manifest fields:
+### 1. Service Worker Not Detected
+PWABuilder says it "did not find a Service Worker." The `vite-plugin-pwa` generates the service worker at build time, but PWABuilder's crawler may not detect it if the SW file isn't being served or registered properly on the published site. We need to ensure the SW registers on the production host.
 
-1. **`id`** field — Required unique identifier for the app
-2. **`screenshots`** — At least one wide (desktop) and one narrow (mobile) screenshot required for store listings
-3. **Icon `purpose` separation** — The same icon file should not be used for both `any` and `maskable`; PWABuilder wants them as separate entries (we already have this but the 512 maskable should ideally be a different file with safe-zone padding)
-4. **`lang`** and **`dir`** fields — Recommended for internationalization
-5. **`prefer_related_applications`** — Recommended field
+**Fix in `src/main.tsx`**: The current guard only unregisters in preview/iframe — but it doesn't explicitly *register* the SW in production. `vite-plugin-pwa` with `registerType: "autoUpdate"` should auto-register via the virtual module, but we should verify the import exists. We may need to explicitly import `virtual:pwa-register` to ensure registration happens.
+
+### 2. Optional Manifest Fields (Yellow Warnings)
+Add commonly expected optional fields to boost the score:
+
+**In `vite.config.ts` manifest**:
+- `shortcuts` — Quick actions (e.g., "New Lookup")
+- `share_target` — Allow receiving shared files
+- `launch_handler` — Control launch behavior (`"client_mode": "navigate-existing"`)
+- `display_override` — Fallback display modes (`["standalone", "minimal-ui"]`)
+- `related_applications` — Empty array to indicate none
+- `iarc_rating_id` — Can be omitted (truly optional)
+- `protocol_handlers` — Can add a custom protocol
 
 ### Changes
 
-**File: `vite.config.ts`** — Update the manifest object to add:
-- `id: "/"` 
-- `lang: "en"`
-- `dir: "ltr"`
-- `prefer_related_applications: false`
-- `screenshots` array with at least one wide (1280x720) and one narrow (390x844) screenshot
-- Split the 512px icon into separate `any` and `maskable` entries with explicit `purpose` values
+**`src/main.tsx`** — Add explicit `import { registerSW } from 'virtual:pwa-register'` and call `registerSW()` in production context to ensure the service worker registers.
 
-**Files: `public/screenshot-wide.png` and `public/screenshot-narrow.png`** — Generate placeholder screenshot images (1280x720 and 390x844) for the manifest. These are simple branded placeholder images with the app name.
+**`vite.config.ts`** — Add these manifest fields:
+- `shortcuts`: One shortcut to open the app
+- `display_override`: `["standalone", "minimal-ui"]`  
+- `launch_handler`: `{ "client_mode": "navigate-existing" }`
+- `related_applications`: `[]`
+- `share_target`: Basic share target config
 
-### Technical Details
-
-The manifest `screenshots` array will look like:
-```json
-"screenshots": [
-  { "src": "screenshot-wide.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "VLOOKUP Web App Desktop View" },
-  { "src": "screenshot-narrow.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "VLOOKUP Web App Mobile View" }
-]
-```
-
-Icons will be updated to have explicit `purpose: "any"` on the first 512px entry and `purpose: "maskable"` on the second.
+This should raise the score significantly and resolve the Service Worker detection issue.
 
