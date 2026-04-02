@@ -4,8 +4,11 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+const appOrigin = "https://lovable-vlookup-cloud.lovable.app";
+const previewOrigin = "https://id-preview--4ddc707e-436a-40d6-ba29-e0f91e38ba28.lovable.app";
+
 const pwaManifest = {
-  id: "/",
+  id: `${appOrigin}/`,
   name: "VLOOKUP Web App",
   short_name: "VLOOKUP",
   description:
@@ -13,7 +16,7 @@ const pwaManifest = {
   theme_color: "#2539d0",
   background_color: "#f8f8fa",
   display: "standalone",
-  display_override: ["window-controls-overlay", "tabbed", "standalone", "minimal-ui"],
+  display_override: ["tabbed", "window-controls-overlay", "standalone", "minimal-ui"],
   orientation: "any",
   scope: "/",
   start_url: "/",
@@ -28,7 +31,7 @@ const pwaManifest = {
   ] as unknown[],
   iarc_rating_id: "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   scope_extensions: [
-    { origin: "*.lovable.app" },
+    { type: "origin", origin: previewOrigin },
   ],
   categories: ["productivity", "utilities"],
   launch_handler: {
@@ -77,18 +80,15 @@ const pwaManifest = {
       ],
     },
   ],
-  tabbed_display: {
-    tab_strip: {
-      home_tab: {
-        url: "/",
-        icons: [
-          {
-            src: "pwa-icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-        ],
-      },
+  tab_strip: {
+    home_tab: {
+      scope_patterns: [
+        { pathname: "/" },
+        { pathname: "/index.html" },
+      ],
+    },
+    new_tab_button: {
+      url: "/",
     },
   },
   note_taking: {
@@ -167,33 +167,14 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
-      strategies: "generateSW",
+      strategies: "injectManifest",
+      srcDir: "public",
+      filename: "sw.ts",
       devOptions: {
         enabled: false,
       },
-      workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "gstatic-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
       },
       includeAssets: ["pwa-icon-192.png", "pwa-icon-512.png", "placeholder.svg"],
       manifest: pwaManifest as any,
