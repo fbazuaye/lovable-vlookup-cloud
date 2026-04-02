@@ -106,6 +106,7 @@ const Index = () => {
   const [returnColumn, setReturnColumn] = useState<string>("");
   const [results, setResults] = useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const { theme, toggle } = useTheme();
 
   const normalizeRows = (rows: any[]): any[] => {
     if (!Array.isArray(rows)) return [];
