@@ -4,12 +4,12 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
-// Extended manifest with experimental PWA fields
 const pwaManifest = {
   id: "/",
   name: "VLOOKUP Web App",
   short_name: "VLOOKUP",
-  description: "Free browser-based VLOOKUP tool that replicates Excel's VLOOKUP function. Upload CSVs, match columns, merge data, and export results instantly.",
+  description:
+    "Free browser-based VLOOKUP tool that replicates Excel's VLOOKUP function. Upload CSVs, match columns, merge data, and export results instantly.",
   theme_color: "#2539d0",
   background_color: "#f8f8fa",
   display: "standalone",
@@ -52,16 +52,33 @@ const pwaManifest = {
       tag: "vlookup-widget",
       ms_ac_template: "widget/template",
       screenshots: [
-        { src: "screenshot-wide.png", sizes: "1280x720", label: "VLOOKUP Widget" },
+        {
+          src: "screenshot-wide.png",
+          sizes: "1280x720",
+          type: "image/png",
+          label: "VLOOKUP Widget",
+        },
       ],
-      icons: [{ src: "pwa-icon-192.png", sizes: "192x192" }],
+      icons: [
+        {
+          src: "pwa-icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+      ],
     },
   ],
   tabbed_display: {
     tab_strip: {
       home_tab: {
         url: "/",
-        icons: [{ src: "pwa-icon-192.png", sizes: "192x192" }],
+        icons: [
+          {
+            src: "pwa-icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ],
       },
     },
   },
@@ -74,7 +91,13 @@ const pwaManifest = {
       short_name: "Lookup",
       url: "/",
       description: "Start a new VLOOKUP operation",
-      icons: [{ src: "pwa-icon-192.png", sizes: "192x192" }],
+      icons: [
+        {
+          src: "pwa-icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+      ],
     },
   ],
   share_target: {
@@ -164,7 +187,6 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       includeAssets: ["pwa-icon-192.png", "pwa-icon-512.png", "placeholder.svg"],
-      // Cast to any to allow experimental manifest fields
       manifest: pwaManifest as any,
     }),
   ].filter(Boolean),
