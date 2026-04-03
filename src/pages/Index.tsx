@@ -235,6 +235,7 @@ const Index = () => {
 
     const result = performVLookup(tableA, tableB, lookupColumn, matchColumn, returnColumn);
     setResults(result);
+    trackUsage("bulk_lookup", result.length, 0);
     toast.success(`Bulk VLOOKUP complete: ${result.length} rows processed`);
   };
 
