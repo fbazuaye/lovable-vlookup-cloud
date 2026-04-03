@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./components/SplashScreen";
+import OfflineBanner from "./components/OfflineBanner";
 
 const queryClient = new QueryClient();
 
