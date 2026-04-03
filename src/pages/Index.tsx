@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { FileUpload } from "@/components/FileUpload";
@@ -6,9 +7,10 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
@@ -107,6 +109,18 @@ const Index = () => {
   const [results, setResults] = useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { theme, toggle } = useTheme();
+  const { user, profile, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const trackUsage = async (actionType: string, lookups: number = 0, files: number = 0) => {
+    if (!user) return;
+    await supabase.from("usage_analytics").insert({
+      user_id: user.id,
+      action_type: actionType,
+      lookup_count: lookups,
+      files_processed: files,
+    });
+  };
 
   const normalizeRows = (rows: any[]): any[] => {
     if (!Array.isArray(rows)) return [];
@@ -149,10 +163,12 @@ const Index = () => {
     if (table === "A") {
       setTableA(normalizedData);
       setFileNameA(fileName);
+      trackUsage("file_upload", 0, 1);
       toast.success(`Table A loaded: ${normalizedData.length} rows`);
     } else {
       setTableB(normalizedData);
       setFileNameB(fileName);
+      trackUsage("file_upload", 0, 1);
       toast.success(`Table B loaded: ${normalizedData.length} rows`);
     }
   };
@@ -199,6 +215,7 @@ const Index = () => {
     if (result !== null) {
       toast.success(`Result: ${result}`);
       setResults([{ "Lookup Value": value, [returnColumn]: result }]);
+      trackUsage("single_lookup", 1, 0);
     } else {
       toast.error("No match found");
       setResults([{ "Lookup Value": value, [returnColumn]: "N/A" }]);
@@ -218,6 +235,7 @@ const Index = () => {
 
     const result = performVLookup(tableA, tableB, lookupColumn, matchColumn, returnColumn);
     setResults(result);
+    trackUsage("bulk_lookup", result.length, 0);
     toast.success(`Bulk VLOOKUP complete: ${result.length} rows processed`);
   };
 
@@ -284,8 +302,28 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Theme Toggle */}
-        <div className="flex justify-end mb-2">
+        {/* Nav Bar */}
+        <div className="flex items-center justify-end gap-2 mb-2">
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin")} className="gap-1">
+              <Shield className="h-4 w-4" /> Admin
+            </Button>
+          )}
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {profile?.display_name || user.email}
+              </span>
+              <Button variant="ghost" size="sm" onClick={signOut} className="gap-1">
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="gap-1">
+              <LogIn className="h-4 w-4" /> Sign In
+            </Button>
+          )}
           <button
             onClick={toggle}
             className="p-2 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-colors"
