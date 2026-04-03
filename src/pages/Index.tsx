@@ -6,7 +6,7 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, Database, InfoIcon, Smartphone, Share, X, Sun, Moon } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
 import { toast } from "sonner";
