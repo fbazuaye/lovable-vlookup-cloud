@@ -3,7 +3,7 @@
 import { clientsClaim } from "workbox-core";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
-import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching";
+import { cleanupOutdatedCaches, createHandlerBoundToURL, matchPrecache, precacheAndRoute } from "workbox-precaching";
 import { NavigationRoute, registerRoute, setCatchHandler } from "workbox-routing";
 import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
 
@@ -34,7 +34,9 @@ const APP_SHELL_URLS = ["/", "/manifest.webmanifest"];
 const REFRESH_CACHE_NAME = "vlookup-fresh-content";
 const NOTIFICATION_ICON = "/pwa-icon-192.png";
 const OFFLINE_FALLBACK = "/offline.html";
-const OFFLINE_CACHE = "offline-fallback";
+const LEGACY_OFFLINE_CACHE = "offline-fallback";
+const ANALYTICS_SCRIPT_PATH = "/~flock.js";
+const ANALYTICS_ENDPOINT_PATH = "/~api/analytics";
 
 // ── Core setup ──────────────────────────────────────────────────────
 self.skipWaiting();
@@ -45,11 +47,8 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-// Also cache the standalone offline fallback page during install
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(OFFLINE_CACHE).then((cache) => cache.add(OFFLINE_FALLBACK))
-  );
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete(LEGACY_OFFLINE_CACHE));
 });
 
 // ── Navigation ──────────────────────────────────────────────────────
@@ -61,6 +60,42 @@ const navigationRoute = new NavigationRoute(
   { denylist: [/^\/~oauth/] },
 );
 registerRoute(navigationRoute);
+
+// ── Host-injected analytics assets ───────────────────────────────────
+// The published host injects a tracking script into HTML responses.
+// PWABuilder's offline audit can trip over that request when offline,
+// so provide safe offline fallbacks for those endpoints.
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname === ANALYTICS_SCRIPT_PATH,
+  async ({ request }) => {
+    try {
+      return await fetch(request);
+    } catch {
+      return new Response("/* offline analytics noop */", {
+        headers: {
+          "Cache-Control": "no-store",
+          "Content-Type": "application/javascript; charset=utf-8",
+        },
+      });
+    }
+  },
+  "GET",
+);
+
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname === ANALYTICS_ENDPOINT_PATH,
+  async ({ request }) => {
+    try {
+      return await fetch(request);
+    } catch {
+      return new Response(null, {
+        status: 204,
+        statusText: "No Content",
+      });
+    }
+  },
+  "POST",
+);
 
 // ── Static assets (same-origin) ─────────────────────────────────────
 registerRoute(
@@ -105,10 +140,37 @@ registerRoute(
 // offline), serve the offline fallback for navigation requests.
 setCatchHandler(async ({ request }) => {
   if (request.mode === "navigate") {
-    const cache = await caches.open(OFFLINE_CACHE);
-    const fallback = await cache.match(OFFLINE_FALLBACK);
+    const fallback = await matchPrecache(OFFLINE_FALLBACK);
     if (fallback) return fallback;
+
+    return new Response(
+      "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Offline</title><body><main><h1>You're offline</h1><p>Please reconnect and try again.</p></main></body></html>",
+      {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+        },
+      },
+    );
   }
+
+  const url = new URL(request.url);
+
+  if (url.origin === self.location.origin && url.pathname === ANALYTICS_SCRIPT_PATH) {
+    return new Response("/* offline analytics noop */", {
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/javascript; charset=utf-8",
+      },
+    });
+  }
+
+  if (url.origin === self.location.origin && url.pathname === ANALYTICS_ENDPOINT_PATH) {
+    return new Response(null, {
+      status: 204,
+      statusText: "No Content",
+    });
+  }
+
   return Response.error();
 });
 
