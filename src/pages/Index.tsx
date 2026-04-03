@@ -215,6 +215,7 @@ const Index = () => {
     if (result !== null) {
       toast.success(`Result: ${result}`);
       setResults([{ "Lookup Value": value, [returnColumn]: result }]);
+      trackUsage("single_lookup", 1, 0);
     } else {
       toast.error("No match found");
       setResults([{ "Lookup Value": value, [returnColumn]: "N/A" }]);
