@@ -297,14 +297,14 @@ const Index = () => {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-primary to-primary-light rounded-2xl mb-4 shadow-medium">
-            <Database className="h-8 w-8 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src="/logo_3.png" alt="VLookup Cloud" width={64} height={64} className="rounded-2xl shadow-medium" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            VLOOKUP Web App
+            VLookup Cloud – AI Data Lookup & Smart Spreadsheet Assistant
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
-            Excel's VLOOKUP function in your browser. Upload CSV or Excel files, match columns, and merge data instantly.
+            AI-powered data lookup tool for fast, accurate spreadsheet searches, VLOOKUP automation, and smart data insights in seconds.
           </p>
           <InstallButton />
         </div>
