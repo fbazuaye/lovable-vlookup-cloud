@@ -25,6 +25,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineBanner />
         {showSplash && <SplashScreen onFinished={hideSplash} />}
         <BrowserRouter>
           <Routes>
