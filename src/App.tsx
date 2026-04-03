@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./components/SplashScreen";
+import OfflineBanner from "./components/OfflineBanner";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineBanner />
         {showSplash && <SplashScreen onFinished={hideSplash} />}
         <BrowserRouter>
           <Routes>
