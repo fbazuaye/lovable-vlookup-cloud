@@ -109,6 +109,18 @@ const Index = () => {
   const [results, setResults] = useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { theme, toggle } = useTheme();
+  const { user, profile, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const trackUsage = async (actionType: string, lookups: number = 0, files: number = 0) => {
+    if (!user) return;
+    await supabase.from("usage_analytics").insert({
+      user_id: user.id,
+      action_type: actionType,
+      lookup_count: lookups,
+      files_processed: files,
+    });
+  };
 
   const normalizeRows = (rows: any[]): any[] => {
     if (!Array.isArray(rows)) return [];
