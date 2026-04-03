@@ -302,8 +302,28 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Theme Toggle */}
-        <div className="flex justify-end mb-2">
+        {/* Nav Bar */}
+        <div className="flex items-center justify-end gap-2 mb-2">
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin")} className="gap-1">
+              <Shield className="h-4 w-4" /> Admin
+            </Button>
+          )}
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {profile?.display_name || user.email}
+              </span>
+              <Button variant="ghost" size="sm" onClick={signOut} className="gap-1">
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="gap-1">
+              <LogIn className="h-4 w-4" /> Sign In
+            </Button>
+          )}
           <button
             onClick={toggle}
             className="p-2 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-colors"
