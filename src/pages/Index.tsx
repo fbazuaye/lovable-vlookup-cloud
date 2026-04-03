@@ -163,10 +163,12 @@ const Index = () => {
     if (table === "A") {
       setTableA(normalizedData);
       setFileNameA(fileName);
+      trackUsage("file_upload", 0, 1);
       toast.success(`Table A loaded: ${normalizedData.length} rows`);
     } else {
       setTableB(normalizedData);
       setFileNameB(fileName);
+      trackUsage("file_upload", 0, 1);
       toast.success(`Table B loaded: ${normalizedData.length} rows`);
     }
   };
