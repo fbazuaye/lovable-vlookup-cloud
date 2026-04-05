@@ -35,7 +35,8 @@ const App = () => {
           {showSplash && <SplashScreen onFinished={hideSplash} />}
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/admin" element={<Admin />} />

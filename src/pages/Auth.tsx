@@ -20,7 +20,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (session) navigate("/", { replace: true });
+    if (session) navigate("/dashboard", { replace: true });
   }, [session, navigate]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
