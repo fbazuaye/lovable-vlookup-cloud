@@ -7,14 +7,18 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3 } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
 import { supabase } from "@/integrations/supabase/client";
+import { TextCleanTab } from "@/components/TextCleanTab";
+import { SearchReplaceTab } from "@/components/SearchReplaceTab";
+import { DataAuditTab } from "@/components/DataAuditTab";
 
 const useIsIos = () => {
   const [isIos, setIsIos] = useState(false);
