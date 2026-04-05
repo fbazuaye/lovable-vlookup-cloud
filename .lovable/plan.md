@@ -1,57 +1,77 @@
 
 
-## Plan: Fix PWABuilder Remaining Issues (30/45 → Higher + Service Worker Detection)
+# Plan: Add Data Tools Suite (Text Cleaning, Search & Replace, Data Auditing)
 
-### Two Core Problems
+## Overview
 
-**1. Service Worker Still Not Detected (+0)**
-The `vite-plugin-pwa` with `registerType: "autoUpdate"` uses an auto-generated virtual module to register the SW. However, PWABuilder's crawler may not be finding the `sw.js` file. The issue is that `registerType: "autoUpdate"` injects the registration inline — the crawler needs to find an actual `/sw.js` file at the root. We should add `selfDestroying: false` and ensure the `navigateFallback` is set to `index.html` so the SW file is properly generated and served.
+Expand VLookup Cloud from a single-purpose VLOOKUP tool into a multi-tool data utility platform. The new features will be organized as **tabs** on the main page, keeping the current VLOOKUP as the default tab while adding three new tool categories from your document.
 
-Additionally, the published domain (`lovable-vlookup-cloud.lovable.app`) needs to be checked — the service worker may not be deploying because the build output isn't including it. We'll add `injectRegister: 'script'` to ensure a `<script>` tag is injected into the HTML that registers `/sw.js`, making it crawlable.
+## UI Design
 
-**2. Manifest Score 30/45 — Missing Optional Fields**
-From the screenshot, the action items and capabilities suggest adding:
-- `file_handlers` — Register to handle CSV/Excel files
-- `protocol_handlers` — Register a custom protocol
-- `edge_side_panel` — For sidebar pinning (Windows)
-- `handle_links` — Declare link handling preference
+The main page will get a **tabbed interface** below the header:
 
-### Changes
-
-**File: `vite.config.ts`**
-- Change `injectRegister` to `'script'` so the SW registration is visible in HTML source (crawlable)
-- Add `file_handlers` to handle `.csv` and `.xlsx` files natively
-- Add `protocol_handlers` for a `web+vlookup` protocol
-- Add `"window-controls-overlay"` to `display_override`
-- Add `edge_side_panel` with `preferred_width`
-- Add `handle_links: "preferred"` to declare link handling
-
-**File: `src/main.tsx`**
-- Remove the manual `registerSW` import and call since `injectRegister: 'script'` will handle registration automatically via an injected script tag in the HTML. Keep the preview/iframe guard to unregister SWs in dev contexts.
-
-### Technical Details
-
-```typescript
-// New manifest fields to add:
-file_handlers: [
-  {
-    action: "/",
-    accept: {
-      "text/csv": [".csv"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-      "application/vnd.ms-excel": [".xls"]
-    }
-  }
-],
-protocol_handlers: [
-  { protocol: "web+vlookup", url: "/?url=%s" }
-],
-handle_links: "preferred",
-edge_side_panel: { preferred_width: 480 }
-
-// display_override updated:
-display_override: ["window-controls-overlay", "standalone", "minimal-ui"]
+```text
+┌─────────────┬──────────────────┬──────────────────┬─────────────────┐
+│  🔍 VLOOKUP │  🧹 Text & Clean │  🔄 Search/Replace│  📊 Data Audit  │
+│  (current)  │                  │                   │                 │
+└─────────────┴──────────────────┴──────────────────┴─────────────────┘
 ```
 
-The `injectRegister: 'script'` change ensures a `<script>` tag appears in the built `index.html` that registers `/sw.js`, making it discoverable by PWABuilder's crawler.
+Each tab shares the same file upload area (single file for tools that operate on one dataset). Results display in the same table preview component with export capability.
+
+### Tab 1: VLOOKUP (existing, unchanged)
+Current two-file lookup workflow stays as-is.
+
+### Tab 2: Text & Clean
+Single file upload. User picks a column, then applies operations:
+- **CLEAN** — Strip non-printable characters
+- **TRIM** — Remove leading/trailing/excess spaces
+- **TEXT** — Format numbers/dates (e.g., pad zeros, date format picker)
+- **PROPER / UPPER / LOWER** — Case conversion buttons
+
+UI: Column selector + action buttons in a toolbar. Preview shows before/after.
+
+### Tab 3: Search & Replace
+Single file upload. User picks a column:
+- **REPLACE** — Position-based text replacement (start position, length, new text)
+- **SUBSTITUTE** — Find & replace specific text/characters
+- **REMOVE ZEROS** — Toggle to strip leading zeros or all zeros
+
+UI: Input fields for find/replace values + action button. Live preview of changes.
+
+### Tab 4: Data Audit
+Single file upload. User picks a column:
+- **DUPLICATES** — Flag/highlight duplicate values, show count
+- **COUNT / COUNTIF** — Count occurrences of each value (frequency table)
+- **UNIQUE** — Extract distinct values only
+
+UI: Column selector + operation picker. Results show as a summary table.
+
+## Technical Approach
+
+### New files to create:
+1. **`src/lib/textTools.ts`** — Pure functions: clean, trim, textFormat, proper, upper, lower, replace, substitute, removeZeros
+2. **`src/lib/auditTools.ts`** — Pure functions: findDuplicates, countValues, countIf, extractUnique
+3. **`src/components/TextCleanTab.tsx`** — UI for text cleaning operations
+4. **`src/components/SearchReplaceTab.tsx`** — UI for search & replace operations
+5. **`src/components/DataAuditTab.tsx`** — UI for duplicate/count/unique operations
+6. **`src/components/SharedFileUpload.tsx`** — Reusable single-file upload for the new tabs
+
+### Modified files:
+- **`src/pages/Index.tsx`** — Add tab navigation (using existing shadcn Tabs component), wrap current VLOOKUP content in Tab 1, render new tab components
+- **`src/lib/vlookup.ts`** — No changes needed
+
+### Design principles:
+- Reuse existing components (FileUpload, TablePreview, ColumnSelector, Button, Card)
+- All processing stays client-side (no backend needed)
+- Each operation produces exportable CSV results
+- Consistent card-based layout matching current design
+- Mobile-responsive tab layout (scrollable tabs on small screens)
+- Track usage analytics per tool type
+
+## Implementation Order
+1. Create utility function libraries (textTools.ts, auditTools.ts)
+2. Build the three new tab components
+3. Integrate tabs into Index.tsx
+4. Test end-to-end with sample data
 
