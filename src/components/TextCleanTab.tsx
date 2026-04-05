@@ -4,7 +4,7 @@ import { ColumnSelector } from "@/components/ColumnSelector";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TablePreview } from "@/components/TablePreview";
-import { Download, Eraser, Type, CaseSensitive, CaseUpper, CaseLower } from "lucide-react";
+import { Download, Eraser, Type, CaseSensitive, CaseUpper, CaseLower, InfoIcon } from "lucide-react";
 import { applyTextOperation, TextOperation } from "@/lib/textTools";
 import { convertToCSV } from "@/lib/vlookup";
 import { toast } from "sonner";
