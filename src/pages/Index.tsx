@@ -7,14 +7,18 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3 } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { performVLookup, performSingleLookup, convertToCSV } from "@/lib/vlookup";
 import { supabase } from "@/integrations/supabase/client";
+import { TextCleanTab } from "@/components/TextCleanTab";
+import { SearchReplaceTab } from "@/components/SearchReplaceTab";
+import { DataAuditTab } from "@/components/DataAuditTab";
 
 const useIsIos = () => {
   const [isIos, setIsIos] = useState(false);
@@ -347,136 +351,172 @@ const Index = () => {
           <InstallButton />
         </div>
 
-        {/* Instructions Section */}
-        <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
-          <div className="flex items-start gap-3">
-            <InfoIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-foreground mb-3">How to Use VLOOKUP</h3>
-              <ol className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex gap-2">
-                  <span className="font-semibold text-primary">1.</span>
-                  <span>Upload two files (CSV or Excel) - Table A contains values you want to look up, Table B contains reference data</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-primary">2.</span>
-                  <span>Select the lookup column from Table A (the value you are searching for)</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-primary">3.</span>
-                  <span>Select the match column from Table B (where to find matching values)</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-primary">4.</span>
-                  <span>Select the return column from Table B (the data you want to retrieve)</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-primary">5.</span>
-                  <span>Click "AI Suggest" for automatic column matching, or perform a single lookup or bulk lookup</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-primary">6.</span>
-                  <span>Export your results as CSV when ready</span>
-                </li>
-              </ol>
-            </div>
-          </div>
-        </Card>
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="vlookup" className="mb-8">
+          <TabsList className="w-full grid grid-cols-4 h-12 mb-6">
+            <TabsTrigger value="vlookup" className="gap-2 text-xs sm:text-sm">
+              <Search className="h-4 w-4 hidden sm:inline" /> VLOOKUP
+            </TabsTrigger>
+            <TabsTrigger value="textclean" className="gap-2 text-xs sm:text-sm">
+              <FileText className="h-4 w-4 hidden sm:inline" /> Text & Clean
+            </TabsTrigger>
+            <TabsTrigger value="searchreplace" className="gap-2 text-xs sm:text-sm">
+              <Search className="h-4 w-4 hidden sm:inline" /> Search/Replace
+            </TabsTrigger>
+            <TabsTrigger value="dataaudit" className="gap-2 text-xs sm:text-sm">
+              <BarChart3 className="h-4 w-4 hidden sm:inline" /> Data Audit
+            </TabsTrigger>
+          </TabsList>
 
-        {/* File Upload Section */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-card rounded-xl p-6 border border-border shadow-soft">
-            <h2 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                1
-              </span>
-              Table A (Lookup Table)
-            </h2>
-            <FileUpload
-              onFileUpload={(file) => handleFileUpload(file, "A")}
-              label="Upload Table A"
-              fileName={fileNameA}
-            />
-            {tableA.length > 0 && <TablePreview data={tableA} title="Preview" maxRows={3} />}
-          </div>
+          {/* Tab 1: VLOOKUP (existing) */}
+          <TabsContent value="vlookup">
+            {/* Instructions Section */}
+            <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
+              <div className="flex items-start gap-3">
+                <InfoIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">How to Use VLOOKUP</h3>
+                  <ol className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-primary">1.</span>
+                      <span>Upload two files (CSV or Excel) - Table A contains values you want to look up, Table B contains reference data</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-primary">2.</span>
+                      <span>Select the lookup column from Table A (the value you are searching for)</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-primary">3.</span>
+                      <span>Select the match column from Table B (where to find matching values)</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-primary">4.</span>
+                      <span>Select the return column from Table B (the data you want to retrieve)</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-primary">5.</span>
+                      <span>Click "AI Suggest" for automatic column matching, or perform a single lookup or bulk lookup</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-primary">6.</span>
+                      <span>Export your results as CSV when ready</span>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </Card>
 
-          <div className="bg-card rounded-xl p-6 border border-border shadow-soft">
-            <h2 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                2
-              </span>
-              Table B (Reference Table)
-            </h2>
-            <FileUpload
-              onFileUpload={(file) => handleFileUpload(file, "B")}
-              label="Upload Table B"
-              fileName={fileNameB}
-            />
-            {tableB.length > 0 && <TablePreview data={tableB} title="Preview" maxRows={3} />}
-          </div>
-        </div>
+            {/* File Upload Section */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-card rounded-xl p-6 border border-border shadow-soft">
+                <h2 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                    1
+                  </span>
+                  Table A (Lookup Table)
+                </h2>
+                <FileUpload
+                  onFileUpload={(file) => handleFileUpload(file, "A")}
+                  label="Upload Table A"
+                  fileName={fileNameA}
+                />
+                {tableA.length > 0 && <TablePreview data={tableA} title="Preview" maxRows={3} />}
+              </div>
 
-        {/* Column Selection */}
-        {tableA.length > 0 && tableB.length > 0 && (
-          <div className="bg-card rounded-xl p-6 border border-border shadow-soft mb-8">
-            <h2 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                3
-              </span>
-              Select Columns
-            </h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-6">
-              <ColumnSelector
-                columns={columnsA}
-                value={lookupColumn}
-                onChange={setLookupColumn}
-                label="Lookup Column (Table A)"
-                placeholder="Select lookup column"
-              />
-              <ColumnSelector
-                columns={columnsB}
-                value={matchColumn}
-                onChange={setMatchColumn}
-                label="Match Column (Table B)"
-                placeholder="Select match column"
-              />
-              <ColumnSelector
-                columns={columnsB}
-                value={returnColumn}
-                onChange={setReturnColumn}
-                label="Return Column (Table B)"
-                placeholder="Select return column"
-              />
+              <div className="bg-card rounded-xl p-6 border border-border shadow-soft">
+                <h2 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                    2
+                  </span>
+                  Table B (Reference Table)
+                </h2>
+                <FileUpload
+                  onFileUpload={(file) => handleFileUpload(file, "B")}
+                  label="Upload Table B"
+                  fileName={fileNameB}
+                />
+                {tableB.length > 0 && <TablePreview data={tableB} title="Preview" maxRows={3} />}
+              </div>
             </div>
 
-            <LookupForm
-              onSingleLookup={handleSingleLookup}
-              onBulkLookup={handleBulkLookup}
-              onAiSuggest={handleAiSuggest}
-              disabled={!matchColumn || !returnColumn}
-              isAiLoading={isAiLoading}
-            />
-          </div>
-        )}
+            {/* Column Selection */}
+            {tableA.length > 0 && tableB.length > 0 && (
+              <div className="bg-card rounded-xl p-6 border border-border shadow-soft mb-8">
+                <h2 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                    3
+                  </span>
+                  Select Columns
+                </h2>
+                <div className="grid md:grid-cols-3 gap-6 mb-6">
+                  <ColumnSelector
+                    columns={columnsA}
+                    value={lookupColumn}
+                    onChange={setLookupColumn}
+                    label="Lookup Column (Table A)"
+                    placeholder="Select lookup column"
+                  />
+                  <ColumnSelector
+                    columns={columnsB}
+                    value={matchColumn}
+                    onChange={setMatchColumn}
+                    label="Match Column (Table B)"
+                    placeholder="Select match column"
+                  />
+                  <ColumnSelector
+                    columns={columnsB}
+                    value={returnColumn}
+                    onChange={setReturnColumn}
+                    label="Return Column (Table B)"
+                    placeholder="Select return column"
+                  />
+                </div>
 
-        {/* Results Section */}
-        {results.length > 0 && (
-          <div className="bg-card rounded-xl p-6 border border-border shadow-soft">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm font-bold">
-                  ✓
-                </span>
-                Results
-              </h2>
-              <Button onClick={handleExport} className="bg-accent hover:bg-accent/90">
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
-              </Button>
-            </div>
-            <TablePreview data={results} title="" maxRows={10} />
-          </div>
-        )}
+                <LookupForm
+                  onSingleLookup={handleSingleLookup}
+                  onBulkLookup={handleBulkLookup}
+                  onAiSuggest={handleAiSuggest}
+                  disabled={!matchColumn || !returnColumn}
+                  isAiLoading={isAiLoading}
+                />
+              </div>
+            )}
+
+            {/* Results Section */}
+            {results.length > 0 && (
+              <div className="bg-card rounded-xl p-6 border border-border shadow-soft">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm font-bold">
+                      ✓
+                    </span>
+                    Results
+                  </h2>
+                  <Button onClick={handleExport} className="bg-accent hover:bg-accent/90">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                </div>
+                <TablePreview data={results} title="" maxRows={10} />
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tab 2: Text & Clean */}
+          <TabsContent value="textclean">
+            <TextCleanTab />
+          </TabsContent>
+
+          {/* Tab 3: Search & Replace */}
+          <TabsContent value="searchreplace">
+            <SearchReplaceTab />
+          </TabsContent>
+
+          {/* Tab 4: Data Audit */}
+          <TabsContent value="dataaudit">
+            <DataAuditTab />
+          </TabsContent>
+        </Tabs>
       </div>
       
       {/* Footer */}
