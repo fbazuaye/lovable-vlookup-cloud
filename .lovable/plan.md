@@ -1,77 +1,74 @@
 
 
-# Plan: Add Data Tools Suite (Text Cleaning, Search & Replace, Data Auditing)
+# Plan: Professional Landing Page with Gated Tool Access
 
 ## Overview
 
-Expand VLookup Cloud from a single-purpose VLOOKUP tool into a multi-tool data utility platform. The new features will be organized as **tabs** on the main page, keeping the current VLOOKUP as the default tab while adding three new tool categories from your document.
+Create a public marketing landing page at `/` that promotes VLookup Cloud's features and encourages free account creation. Move the actual tools behind authentication to a new `/dashboard` route. Users who aren't signed in see the landing page; signed-in users go straight to the dashboard.
 
 ## UI Design
 
-The main page will get a **tabbed interface** below the header:
+### Landing Page (`/` — unauthenticated)
 
 ```text
-┌─────────────┬──────────────────┬──────────────────┬─────────────────┐
-│  🔍 VLOOKUP │  🧹 Text & Clean │  🔄 Search/Replace│  📊 Data Audit  │
-│  (current)  │                  │                   │                 │
-└─────────────┴──────────────────┴──────────────────┴─────────────────┘
+┌──────────────────────────────────────────────────┐
+│  [Logo]  VLookup Cloud          [Sign In] [Dark] │
+├──────────────────────────────────────────────────┤
+│                                                  │
+│   Hero Section                                   │
+│   "AI Data Lookup & Smart Spreadsheet Assistant"  │
+│   Tagline + [Create Free Account] CTA button     │
+│                                                  │
+├──────────────────────────────────────────────────┤
+│                                                  │
+│   Feature Cards (4 columns on desktop)           │
+│   ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
+│   │VLOOKUP │ │Text &  │ │Search &│ │ Data   │   │
+│   │        │ │Clean   │ │Replace │ │ Audit  │   │
+│   └────────┘ └────────┘ └────────┘ └────────┘   │
+│                                                  │
+├──────────────────────────────────────────────────┤
+│   "Why Create a Free Account?" Section           │
+│   • Unlimited lookups  • Export results           │
+│   • AI-powered suggestions  • All tools free      │
+│                                                  │
+├──────────────────────────────────────────────────┤
+│   Final CTA: [Get Started Free]                  │
+│                                                  │
+├──────────────────────────────────────────────────┤
+│   Footer: © LiveGig Ltd · Privacy Policy          │
+└──────────────────────────────────────────────────┘
 ```
 
-Each tab shares the same file upload area (single file for tools that operate on one dataset). Results display in the same table preview component with export capability.
+### Dashboard (`/dashboard` — authenticated only)
+The current Index.tsx tool interface moves here, unchanged.
 
-### Tab 1: VLOOKUP (existing, unchanged)
-Current two-file lookup workflow stays as-is.
-
-### Tab 2: Text & Clean
-Single file upload. User picks a column, then applies operations:
-- **CLEAN** — Strip non-printable characters
-- **TRIM** — Remove leading/trailing/excess spaces
-- **TEXT** — Format numbers/dates (e.g., pad zeros, date format picker)
-- **PROPER / UPPER / LOWER** — Case conversion buttons
-
-UI: Column selector + action buttons in a toolbar. Preview shows before/after.
-
-### Tab 3: Search & Replace
-Single file upload. User picks a column:
-- **REPLACE** — Position-based text replacement (start position, length, new text)
-- **SUBSTITUTE** — Find & replace specific text/characters
-- **REMOVE ZEROS** — Toggle to strip leading zeros or all zeros
-
-UI: Input fields for find/replace values + action button. Live preview of changes.
-
-### Tab 4: Data Audit
-Single file upload. User picks a column:
-- **DUPLICATES** — Flag/highlight duplicate values, show count
-- **COUNT / COUNTIF** — Count occurrences of each value (frequency table)
-- **UNIQUE** — Extract distinct values only
-
-UI: Column selector + operation picker. Results show as a summary table.
+### Routing Logic
+- `/` → If logged in, redirect to `/dashboard`. If not, show landing page.
+- `/dashboard` → If not logged in, redirect to `/auth`.
 
 ## Technical Approach
 
-### New files to create:
-1. **`src/lib/textTools.ts`** — Pure functions: clean, trim, textFormat, proper, upper, lower, replace, substitute, removeZeros
-2. **`src/lib/auditTools.ts`** — Pure functions: findDuplicates, countValues, countIf, extractUnique
-3. **`src/components/TextCleanTab.tsx`** — UI for text cleaning operations
-4. **`src/components/SearchReplaceTab.tsx`** — UI for search & replace operations
-5. **`src/components/DataAuditTab.tsx`** — UI for duplicate/count/unique operations
-6. **`src/components/SharedFileUpload.tsx`** — Reusable single-file upload for the new tabs
+### New files:
+1. **`src/pages/Landing.tsx`** — Professional marketing landing page with hero, feature cards, benefits section, and CTA buttons linking to `/auth`
+2. **`src/pages/Dashboard.tsx`** — Rename/move current `Index.tsx` content here, add auth guard
 
 ### Modified files:
-- **`src/pages/Index.tsx`** — Add tab navigation (using existing shadcn Tabs component), wrap current VLOOKUP content in Tab 1, render new tab components
-- **`src/lib/vlookup.ts`** — No changes needed
+- **`src/App.tsx`** — Add `/dashboard` route, update `/` to render Landing page
+- **`src/pages/Index.tsx`** — Convert to a router that checks auth state: if authenticated → redirect to `/dashboard`, if not → render Landing
 
 ### Design principles:
-- Reuse existing components (FileUpload, TablePreview, ColumnSelector, Button, Card)
-- All processing stays client-side (no backend needed)
-- Each operation produces exportable CSV results
-- Consistent card-based layout matching current design
-- Mobile-responsive tab layout (scrollable tabs on small screens)
-- Track usage analytics per tool type
+- Reuse existing color palette (indigo/emerald gradient), Card components, and branding
+- Professional hero with logo, clear value proposition, prominent CTA buttons
+- Feature cards with icons matching the tab icons (Search, FileText, BarChart3)
+- Benefits section with checkmarks explaining why to sign up
+- Mobile-responsive throughout
+- Footer with branding and privacy policy link
 
 ## Implementation Order
-1. Create utility function libraries (textTools.ts, auditTools.ts)
-2. Build the three new tab components
-3. Integrate tabs into Index.tsx
-4. Test end-to-end with sample data
+1. Create Landing.tsx with full marketing page
+2. Create Dashboard.tsx (move tool UI from Index.tsx)
+3. Update App.tsx routing
+4. Update Index.tsx as auth-aware router
+5. Update Auth.tsx to redirect to `/dashboard` after login
 
