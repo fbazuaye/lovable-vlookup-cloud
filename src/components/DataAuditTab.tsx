@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TablePreview } from "@/components/TablePreview";
-import { Download, Copy, Hash, Filter } from "lucide-react";
+import { Download, Copy, Hash, Filter, InfoIcon } from "lucide-react";
 import { findDuplicates, countValues, countIf, extractUnique, flagDuplicatesInData } from "@/lib/auditTools";
 import { convertToCSV } from "@/lib/vlookup";
 import { toast } from "sonner";
