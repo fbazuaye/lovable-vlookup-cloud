@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TablePreview } from "@/components/TablePreview";
-import { Download, Replace, Search } from "lucide-react";
+import { Download, Replace, Search, InfoIcon } from "lucide-react";
 import { applyTextOperation } from "@/lib/textTools";
 import { convertToCSV } from "@/lib/vlookup";
 import { toast } from "sonner";
@@ -67,6 +67,33 @@ export const SearchReplaceTab = () => {
 
   return (
     <div className="space-y-6">
+      <Card className="p-6 mb-0 bg-primary/5 border-primary/20">
+        <div className="flex items-start gap-3">
+          <InfoIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">How to Use Search & Replace</h3>
+            <ol className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">1.</span>
+                <span>Upload a CSV or Excel file containing the data you want to modify</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">2.</span>
+                <span>Select the target column to apply search and replace operations</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">3.</span>
+                <span>Use SUBSTITUTE to find and replace specific text, REPLACE for position-based replacement, or Remove Zeros to strip leading/all zeros</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">4.</span>
+                <span>Preview the changes and export your modified data as CSV</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </Card>
+
       <Card className="p-6 border-border shadow-soft">
         <h2 className="text-lg font-semibold text-foreground mb-4">Upload Your File</h2>
         <SharedFileUpload

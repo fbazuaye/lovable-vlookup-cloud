@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TablePreview } from "@/components/TablePreview";
-import { Download, Copy, Hash, Filter } from "lucide-react";
+import { Download, Copy, Hash, Filter, InfoIcon } from "lucide-react";
 import { findDuplicates, countValues, countIf, extractUnique, flagDuplicatesInData } from "@/lib/auditTools";
 import { convertToCSV } from "@/lib/vlookup";
 import { toast } from "sonner";
@@ -73,6 +73,33 @@ export const DataAuditTab = () => {
 
   return (
     <div className="space-y-6">
+      <Card className="p-6 mb-0 bg-primary/5 border-primary/20">
+        <div className="flex items-start gap-3">
+          <InfoIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">How to Use Data Audit</h3>
+            <ol className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">1.</span>
+                <span>Upload a CSV or Excel file you want to audit for data quality</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">2.</span>
+                <span>Select the column you want to analyze</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">3.</span>
+                <span>Use Duplicates to find or flag repeated values, COUNT for a frequency table, COUNTIF to count a specific value, or Unique to extract distinct rows</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">4.</span>
+                <span>Review the audit results and export as CSV</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </Card>
+
       <Card className="p-6 border-border shadow-soft">
         <h2 className="text-lg font-semibold text-foreground mb-4">Upload Your File</h2>
         <SharedFileUpload

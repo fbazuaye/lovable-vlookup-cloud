@@ -4,7 +4,7 @@ import { ColumnSelector } from "@/components/ColumnSelector";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TablePreview } from "@/components/TablePreview";
-import { Download, Eraser, Type, CaseSensitive, CaseUpper, CaseLower } from "lucide-react";
+import { Download, Eraser, Type, CaseSensitive, CaseUpper, CaseLower, InfoIcon } from "lucide-react";
 import { applyTextOperation, TextOperation } from "@/lib/textTools";
 import { convertToCSV } from "@/lib/vlookup";
 import { toast } from "sonner";
@@ -43,6 +43,33 @@ export const TextCleanTab = () => {
 
   return (
     <div className="space-y-6">
+      <Card className="p-6 mb-0 bg-primary/5 border-primary/20">
+        <div className="flex items-start gap-3">
+          <InfoIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">How to Use Text & Clean</h3>
+            <ol className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">1.</span>
+                <span>Upload a CSV or Excel file containing the data you want to clean</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">2.</span>
+                <span>Select the target column you want to apply text operations on</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">3.</span>
+                <span>Choose an operation: CLEAN (remove non-printable characters), TRIM (remove extra spaces), PROPER/UPPER/LOWER (change case), or Pad Zeros</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-primary">4.</span>
+                <span>Preview the results and export as CSV when ready</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </Card>
+
       <Card className="p-6 border-border shadow-soft">
         <h2 className="text-lg font-semibold text-foreground mb-4">Upload Your File</h2>
         <SharedFileUpload
