@@ -1,74 +1,46 @@
 
+The user wants a downloadable Word document listing 6 key benefits of VLookup Cloud and why it's better than Excel VLOOKUP/formulas. This is a one-off artifact generation task, not a code feature.
 
-# Plan: Professional Landing Page with Gated Tool Access
+I'll generate a professional .docx file with:
+- Title page header
+- Intro paragraph
+- 6 key benefits (numbered, with descriptions)
+- Comparison section: VLookup Cloud vs Excel VLOOKUP
+- Closing CTA
 
-## Overview
+Once approved, I'll switch to default mode, use the docx skill (docx-js via Node) to generate the file, QA it by converting to PDF/images, and deliver via `<lov-artifact>`.
 
-Create a public marketing landing page at `/` that promotes VLookup Cloud's features and encourages free account creation. Move the actual tools behind authentication to a new `/dashboard` route. Users who aren't signed in see the landing page; signed-in users go straight to the dashboard.
+# Plan: Generate Downloadable Word Document
 
-## UI Design
+## Deliverable
+A professional `.docx` file saved to `/mnt/documents/` listing **6 key benefits of VLookup Cloud** and a comparison showing why it beats Excel VLOOKUP and Excel formulas.
 
-### Landing Page (`/` — unauthenticated)
+## Document Structure
 
-```text
-┌──────────────────────────────────────────────────┐
-│  [Logo]  VLookup Cloud          [Sign In] [Dark] │
-├──────────────────────────────────────────────────┤
-│                                                  │
-│   Hero Section                                   │
-│   "AI Data Lookup & Smart Spreadsheet Assistant"  │
-│   Tagline + [Create Free Account] CTA button     │
-│                                                  │
-├──────────────────────────────────────────────────┤
-│                                                  │
-│   Feature Cards (4 columns on desktop)           │
-│   ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
-│   │VLOOKUP │ │Text &  │ │Search &│ │ Data   │   │
-│   │        │ │Clean   │ │Replace │ │ Audit  │   │
-│   └────────┘ └────────┘ └────────┘ └────────┘   │
-│                                                  │
-├──────────────────────────────────────────────────┤
-│   "Why Create a Free Account?" Section           │
-│   • Unlimited lookups  • Export results           │
-│   • AI-powered suggestions  • All tools free      │
-│                                                  │
-├──────────────────────────────────────────────────┤
-│   Final CTA: [Get Started Free]                  │
-│                                                  │
-├──────────────────────────────────────────────────┤
-│   Footer: © LiveGig Ltd · Privacy Policy          │
-└──────────────────────────────────────────────────┘
-```
-
-### Dashboard (`/dashboard` — authenticated only)
-The current Index.tsx tool interface moves here, unchanged.
-
-### Routing Logic
-- `/` → If logged in, redirect to `/dashboard`. If not, show landing page.
-- `/dashboard` → If not logged in, redirect to `/auth`.
+1. **Title**: "VLookup Cloud — 6 Key Benefits & Why It Beats Excel VLOOKUP"
+2. **Intro paragraph** (2–3 lines)
+3. **6 Key Benefits** (numbered list, each with bold heading + 1–2 sentence explanation):
+   - No formula syntax to memorize
+   - AI-powered column matching
+   - Built-in data cleaning & auditing tools
+   - Handles large files without crashing
+   - Works on any device (cloud-based, no Excel needed)
+   - Privacy-first: files processed in your browser
+4. **Comparison Section**: Side-by-side table — VLookup Cloud vs Excel VLOOKUP
+   - Columns: Feature | Excel VLOOKUP | VLookup Cloud
+   - Rows covering: Setup time, Error handling, Column matching, Data cleaning, File size limits, Mobile use, Learning curve
+5. **Closing CTA**: "Get started free at vlookup.cloud"
 
 ## Technical Approach
+- Use the `docx` skill (docx-js via Node) to generate the file
+- Arial font, US Letter page size, 1" margins
+- Use proper `LevelFormat` numbering (no unicode bullets)
+- Table with DXA widths and `ShadingType.CLEAR`
+- Output: `/mnt/documents/VLookupCloud-Benefits.docx`
 
-### New files:
-1. **`src/pages/Landing.tsx`** — Professional marketing landing page with hero, feature cards, benefits section, and CTA buttons linking to `/auth`
-2. **`src/pages/Dashboard.tsx`** — Rename/move current `Index.tsx` content here, add auth guard
+## QA
+- Convert to PDF via LibreOffice → render pages to images → visually inspect each page for layout, clipping, alignment
+- Fix any issues and re-run until clean
 
-### Modified files:
-- **`src/App.tsx`** — Add `/dashboard` route, update `/` to render Landing page
-- **`src/pages/Index.tsx`** — Convert to a router that checks auth state: if authenticated → redirect to `/dashboard`, if not → render Landing
-
-### Design principles:
-- Reuse existing color palette (indigo/emerald gradient), Card components, and branding
-- Professional hero with logo, clear value proposition, prominent CTA buttons
-- Feature cards with icons matching the tab icons (Search, FileText, BarChart3)
-- Benefits section with checkmarks explaining why to sign up
-- Mobile-responsive throughout
-- Footer with branding and privacy policy link
-
-## Implementation Order
-1. Create Landing.tsx with full marketing page
-2. Create Dashboard.tsx (move tool UI from Index.tsx)
-3. Update App.tsx routing
-4. Update Index.tsx as auth-aware router
-5. Update Auth.tsx to redirect to `/dashboard` after login
-
+## Final Step
+Deliver via `<lov-artifact path="VLookupCloud-Benefits.docx" mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"></lov-artifact>`
