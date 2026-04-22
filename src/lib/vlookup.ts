@@ -7,22 +7,25 @@ export const performVLookup = (
   tableB: any[],
   lookupColumn: string,
   matchColumn: string,
-  returnColumn: string
+  returnColumns: string[]
 ): VLookupResult[] => {
   // Create a map for efficient lookup
   const lookupMap = new Map();
   tableB.forEach((row) => {
     const key = String(row[matchColumn]).trim().toLowerCase();
-    lookupMap.set(key, row[returnColumn]);
+    lookupMap.set(key, row);
   });
 
   // Perform lookup on tableA
   return tableA.map((row) => {
     const lookupValue = String(row[lookupColumn]).trim().toLowerCase();
-    const result = lookupMap.get(lookupValue);
+    const match = lookupMap.get(lookupValue);
     return {
       ...row,
-      [returnColumn]: result !== undefined ? result : "N/A",
+      ...returnColumns.reduce((acc, column) => {
+        acc[column] = match?.[column] !== undefined ? match[column] : "N/A";
+        return acc;
+      }, {} as Record<string, any>),
     };
   });
 };
@@ -31,13 +34,18 @@ export const performSingleLookup = (
   lookupValue: string,
   tableB: any[],
   matchColumn: string,
-  returnColumn: string
-): string | null => {
+  returnColumns: string[]
+): Record<string, any> | null => {
   const normalizedLookup = lookupValue.trim().toLowerCase();
   const match = tableB.find(
     (row) => String(row[matchColumn]).trim().toLowerCase() === normalizedLookup
   );
-  return match ? match[returnColumn] : null;
+  if (!match) return null;
+
+  return returnColumns.reduce((acc, column) => {
+    acc[column] = match[column] !== undefined ? match[column] : "N/A";
+    return acc;
+  }, {} as Record<string, any>);
 };
 
 export const findCommonColumns = (tableA: any[], tableB: any[]): string[] => {
