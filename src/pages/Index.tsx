@@ -264,7 +264,11 @@ const Index = () => {
 
       setLookupColumn(data.lookupColumn);
       setMatchColumn(data.matchColumn);
-      setReturnColumn(data.returnColumn);
+      setReturnColumns(
+        (Array.isArray(data.returnColumns) ? data.returnColumns : [data.returnColumn])
+          .filter(Boolean)
+          .slice(0, 3)
+      );
       
       toast.success("AI suggestions applied!", {
         description: data.reasoning || "Columns selected based on data analysis",
@@ -391,7 +395,7 @@ const Index = () => {
                     </li>
                     <li className="flex gap-2">
                       <span className="font-semibold text-primary">4.</span>
-                      <span>Select the return column from Table B (the data you want to retrieve)</span>
+                    <span>Select 1 to 3 return columns from Table B (the data you want to retrieve)</span>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-semibold text-primary">5.</span>
