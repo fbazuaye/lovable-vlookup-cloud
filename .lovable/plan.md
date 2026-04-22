@@ -1,46 +1,124 @@
 
-The user wants a downloadable Word document listing 6 key benefits of VLookup Cloud and why it's better than Excel VLOOKUP/formulas. This is a one-off artifact generation task, not a code feature.
+# Plan: Allow VLOOKUP to Return 2–3 Columns
 
-I'll generate a professional .docx file with:
-- Title page header
-- Intro paragraph
-- 6 key benefits (numbered, with descriptions)
-- Comparison section: VLookup Cloud vs Excel VLOOKUP
-- Closing CTA
+## Goal
+Yes — the VLOOKUP tool can be upgraded so users can return multiple columns from Table B instead of only one. This would let someone match on one column, then bring back 2 or 3 related fields in the results.
 
-Once approved, I'll switch to default mode, use the docx skill (docx-js via Node) to generate the file, QA it by converting to PDF/images, and deliver via `<lov-artifact>`.
+Example:
+```text
+Lookup by: Product ID
+Return: Product Name, Price, Category
+```
 
-# Plan: Generate Downloadable Word Document
+## What will change
 
-## Deliverable
-A professional `.docx` file saved to `/mnt/documents/` listing **6 key benefits of VLookup Cloud** and a comparison showing why it beats Excel VLOOKUP and Excel formulas.
+### 1. Replace single “Return Column” selection with multi-column selection
+In the VLOOKUP tab, the current field:
 
-## Document Structure
+```text
+Return Column (Table B)
+```
 
-1. **Title**: "VLookup Cloud — 6 Key Benefits & Why It Beats Excel VLOOKUP"
-2. **Intro paragraph** (2–3 lines)
-3. **6 Key Benefits** (numbered list, each with bold heading + 1–2 sentence explanation):
-   - No formula syntax to memorize
-   - AI-powered column matching
-   - Built-in data cleaning & auditing tools
-   - Handles large files without crashing
-   - Works on any device (cloud-based, no Excel needed)
-   - Privacy-first: files processed in your browser
-4. **Comparison Section**: Side-by-side table — VLookup Cloud vs Excel VLOOKUP
-   - Columns: Feature | Excel VLOOKUP | VLookup Cloud
-   - Rows covering: Setup time, Error handling, Column matching, Data cleaning, File size limits, Mobile use, Learning curve
-5. **Closing CTA**: "Get started free at vlookup.cloud"
+will become:
 
-## Technical Approach
-- Use the `docx` skill (docx-js via Node) to generate the file
-- Arial font, US Letter page size, 1" margins
-- Use proper `LevelFormat` numbering (no unicode bullets)
-- Table with DXA widths and `ShadingType.CLEAR`
-- Output: `/mnt/documents/VLookupCloud-Benefits.docx`
+```text
+Return Columns (Table B)
+Select up to 3 columns
+```
 
-## QA
-- Convert to PDF via LibreOffice → render pages to images → visually inspect each page for layout, clipping, alignment
-- Fix any issues and re-run until clean
+Users will be able to choose multiple return columns from Table B.
 
-## Final Step
-Deliver via `<lov-artifact path="VLookupCloud-Benefits.docx" mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"></lov-artifact>`
+### 2. Limit return columns to 3
+To keep the interface simple and prevent messy exports, the selection will allow:
+- Minimum: 1 return column
+- Maximum: 3 return columns
+
+If a user tries to select more than 3, the app will show a friendly message such as:
+
+```text
+You can select up to 3 return columns.
+```
+
+### 3. Update bulk VLOOKUP results
+The bulk lookup output will include all selected return columns.
+
+Example output:
+```text
+Customer ID | Order ID | Product ID | Product Name | Price | Category
+```
+
+If a match is not found, each selected return column will show:
+
+```text
+N/A
+```
+
+### 4. Update single lookup results
+Single value lookup will also return the selected columns.
+
+Example:
+```text
+Lookup Value: P-1001
+Product Name: Laptop Stand
+Price: 29.99
+Category: Accessories
+```
+
+The success message will be adjusted so it does not become too long when multiple fields are returned.
+
+### 5. Update AI column suggestion support
+The existing AI suggestion currently returns one suggested return column. I will update the frontend logic to support multiple return columns safely:
+- If AI returns one return column, the app will use it as normal
+- If AI later returns multiple return columns, the app will use up to 3
+- The current AI function can remain backward-compatible
+
+### 6. Update the “How to Use VLOOKUP” instructions
+The instructions under the VLOOKUP tab will be updated to say users can select up to 3 return columns from Table B.
+
+## Technical approach
+
+### Files to update
+- `src/lib/vlookup.ts`
+- `src/pages/Index.tsx`
+- `src/components/LookupForm.tsx` if needed for disabled-state wording
+- Add or adapt a multi-select UI using existing UI components
+
+### Data logic changes
+The current VLOOKUP utility accepts:
+
+```ts
+returnColumn: string
+```
+
+It will be updated to support:
+
+```ts
+returnColumns: string[]
+```
+
+Bulk lookup will append all selected return fields to each row.
+
+Single lookup will return an object containing all selected return fields instead of a single string.
+
+### UI logic changes
+The state in `Index.tsx` will change from:
+
+```ts
+const [returnColumn, setReturnColumn] = useState<string>("");
+```
+
+to:
+
+```ts
+const [returnColumns, setReturnColumns] = useState<string[]>([]);
+```
+
+The VLOOKUP button will be enabled only when:
+- Table A is uploaded
+- Table B is uploaded
+- Lookup column is selected
+- Match column is selected
+- At least one return column is selected
+
+## Result
+Users will be able to perform a VLOOKUP and return 1, 2, or 3 columns from the matched row, making the tool more useful than Excel’s standard VLOOKUP without requiring formulas.
