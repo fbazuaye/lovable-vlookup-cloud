@@ -4,7 +4,7 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { FileUpload } from "@/components/FileUpload";
 import { TablePreview } from "@/components/TablePreview";
-import { ColumnSelector } from "@/components/ColumnSelector";
+import { ColumnSelector, MultiColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
 import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3 } from "lucide-react";
@@ -109,7 +109,7 @@ const Index = () => {
   const [fileNameB, setFileNameB] = useState<string>("");
   const [lookupColumn, setLookupColumn] = useState<string>("");
   const [matchColumn, setMatchColumn] = useState<string>("");
-  const [returnColumn, setReturnColumn] = useState<string>("");
+  const [returnColumns, setReturnColumns] = useState<string[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { theme, toggle } = useTheme();
@@ -210,24 +210,24 @@ const Index = () => {
   };
 
   const handleSingleLookup = (value: string) => {
-    if (!matchColumn || !returnColumn) {
+    if (!matchColumn || returnColumns.length === 0) {
       toast.error("Please select match and return columns");
       return;
     }
 
-    const result = performSingleLookup(value, tableB, matchColumn, returnColumn);
+    const result = performSingleLookup(value, tableB, matchColumn, returnColumns);
     if (result !== null) {
-      toast.success(`Result: ${result}`);
-      setResults([{ "Lookup Value": value, [returnColumn]: result }]);
+      toast.success(`${returnColumns.length} return column${returnColumns.length > 1 ? "s" : ""} found`);
+      setResults([{ "Lookup Value": value, ...result }]);
       trackUsage("single_lookup", 1, 0);
     } else {
       toast.error("No match found");
-      setResults([{ "Lookup Value": value, [returnColumn]: "N/A" }]);
+      setResults([{ "Lookup Value": value, ...Object.fromEntries(returnColumns.map((column) => [column, "N/A"])) }]);
     }
   };
 
   const handleBulkLookup = () => {
-    if (!lookupColumn || !matchColumn || !returnColumn) {
+    if (!lookupColumn || !matchColumn || returnColumns.length === 0) {
       toast.error("Please select all required columns");
       return;
     }
@@ -237,7 +237,7 @@ const Index = () => {
       return;
     }
 
-    const result = performVLookup(tableA, tableB, lookupColumn, matchColumn, returnColumn);
+    const result = performVLookup(tableA, tableB, lookupColumn, matchColumn, returnColumns);
     setResults(result);
     trackUsage("bulk_lookup", result.length, 0);
     toast.success(`Bulk VLOOKUP complete: ${result.length} rows processed`);
