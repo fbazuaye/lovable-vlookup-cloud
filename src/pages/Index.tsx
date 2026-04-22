@@ -467,12 +467,12 @@ const Index = () => {
                     label="Match Column (Table B)"
                     placeholder="Select match column"
                   />
-                  <ColumnSelector
+                  <MultiColumnSelector
                     columns={columnsB}
-                    value={returnColumn}
-                    onChange={setReturnColumn}
-                    label="Return Column (Table B)"
-                    placeholder="Select return column"
+                    values={returnColumns}
+                    onChange={setReturnColumns}
+                    label="Return Columns (Table B)"
+                    max={3}
                   />
                 </div>
 
@@ -480,7 +480,7 @@ const Index = () => {
                   onSingleLookup={handleSingleLookup}
                   onBulkLookup={handleBulkLookup}
                   onAiSuggest={handleAiSuggest}
-                  disabled={!matchColumn || !returnColumn}
+                  disabled={!matchColumn || returnColumns.length === 0}
                   isAiLoading={isAiLoading}
                 />
               </div>
