@@ -7,7 +7,7 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector, MultiColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3 } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3, TrendingUp } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TextCleanTab } from "@/components/TextCleanTab";
 import { SearchReplaceTab } from "@/components/SearchReplaceTab";
 import { DataAuditTab } from "@/components/DataAuditTab";
+import { TrendsTab } from "@/components/TrendsTab";
 
 const useIsIos = () => {
   const [isIos, setIsIos] = useState(false);
@@ -357,7 +358,7 @@ const Index = () => {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="vlookup" className="mb-8">
-          <TabsList className="w-full grid grid-cols-4 h-12 mb-6">
+          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 h-auto sm:h-12 mb-6">
             <TabsTrigger value="vlookup" className="gap-2 text-xs sm:text-sm">
               <Search className="h-4 w-4 hidden sm:inline" /> VLOOKUP
             </TabsTrigger>
@@ -369,6 +370,9 @@ const Index = () => {
             </TabsTrigger>
             <TabsTrigger value="dataaudit" className="gap-2 text-xs sm:text-sm">
               <BarChart3 className="h-4 w-4 hidden sm:inline" /> Data Audit
+            </TabsTrigger>
+            <TabsTrigger value="trends" className="gap-2 text-xs sm:text-sm">
+              <TrendingUp className="h-4 w-4 hidden sm:inline" /> Trends
             </TabsTrigger>
           </TabsList>
 
@@ -519,6 +523,11 @@ const Index = () => {
           {/* Tab 4: Data Audit */}
           <TabsContent value="dataaudit">
             <DataAuditTab />
+          </TabsContent>
+
+          {/* Tab 5: Trends */}
+          <TabsContent value="trends">
+            <TrendsTab />
           </TabsContent>
         </Tabs>
       </div>

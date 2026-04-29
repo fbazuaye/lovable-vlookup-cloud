@@ -1,124 +1,63 @@
-
-# Plan: Allow VLOOKUP to Return 2–3 Columns
+# Plan: Add Trend Analysis to VLookup Cloud
 
 ## Goal
-Yes — the VLOOKUP tool can be upgraded so users can return multiple columns from Table B instead of only one. This would let someone match on one column, then bring back 2 or 3 related fields in the results.
+Add a 5th tab — **Trends** — that lets users analyze any uploaded spreadsheet for time-series patterns, value distributions, summary statistics, and AI-generated plain-English insights. All numeric/chart computation runs client-side; only the AI summary uses an edge function.
 
-Example:
-```text
-Lookup by: Product ID
-Return: Product Name, Price, Category
-```
+## What the user gets
 
-## What will change
+A new **Trends** tab next to VLOOKUP / Text & Clean / Search-Replace / Data Audit, containing:
 
-### 1. Replace single “Return Column” selection with multi-column selection
-In the VLOOKUP tab, the current field:
+1. **File upload** (reuses `SharedFileUpload`)
+2. **Auto-detected column types**: Dates, Numerics, Categoricals are detected and shown as chips
+3. **Summary Statistics card** — table of every numeric column with: count, missing, min, max, mean, median, std dev, sum
+4. **Time-Series chart** — pick a date column + a numeric column → line chart of values over time (with optional aggregation: sum / mean / count, grouped by day / month / year)
+5. **Distribution chart** — pick any column → bar chart of top 10 values by frequency
+6. **AI Insights panel** — "Analyze Trends" button calls a new edge function that returns 3–6 plain-English bullet points (e.g. *"Revenue grew 23% from Jan to Mar"*, *"Customer churn doubled in Week 12"*, *"Region 'West' accounts for 42% of orders"*)
+7. **Export** — download the summary stats table as CSV
 
-```text
-Return Column (Table B)
-```
+## Files to create
 
-will become:
+### `src/lib/trendTools.ts`
+Pure client-side helpers:
+- `detectColumnTypes(data)` → `{ dates: string[], numerics: string[], categoricals: string[] }`. Heuristic: a column is numeric if ≥80% of non-empty values parse as finite numbers; date if ≥80% parse as valid `Date`; otherwise categorical.
+- `computeSummaryStats(data, numericColumns)` → array of `{ column, count, missing, min, max, mean, median, stdDev, sum }`
+- `buildTimeSeries(data, dateCol, valueCol, aggregation, granularity)` → `[{ date: string, value: number }]` sorted ascending, grouped by day/month/year
+- `buildDistribution(data, column, topN = 10)` → `[{ value: string, count: number }]` sorted descending
+- `summarizeForAI(data, types, stats)` → compact JSON payload (≤ ~3KB) sent to the edge function: column types, sample rows, summary stats, top distributions, time-series deltas
 
-```text
-Return Columns (Table B)
-Select up to 3 columns
-```
+### `src/components/TrendsTab.tsx`
+- Reuses `SharedFileUpload`, `ColumnSelector`, `Card`, `Button`, `Input`, `Tabs` from existing UI kit
+- Uses `recharts` (already a Lovable default dep) for `LineChart` and `BarChart`
+- State: `data`, `fileName`, `types`, `dateCol`, `valueCol`, `aggregation`, `granularity`, `distCol`, `aiInsights`, `isAiLoading`
+- Layout mirrors `DataAuditTab.tsx` — instructions card on top, then tool cards
+- Tracks usage via `usage_analytics` (`action_type: 'trend_analysis'` and `'ai_insights'`)
 
-Users will be able to choose multiple return columns from Table B.
+### `supabase/functions/analyze-trends/index.ts`
+- Receives the compact summary payload from `summarizeForAI`
+- Calls Lovable AI Gateway with `google/gemini-3-flash-preview`
+- Uses **tool-calling for structured output** (not free-form JSON parsing) — returns `{ insights: string[], headline: string }`
+- Handles 429 / 402 errors with explicit user-facing messages
+- CORS headers; deployed automatically; `verify_jwt` left at default
 
-### 2. Limit return columns to 3
-To keep the interface simple and prevent messy exports, the selection will allow:
-- Minimum: 1 return column
-- Maximum: 3 return columns
+### `src/pages/Index.tsx` (edit)
+- Import `TrendsTab` and a `TrendingUp` icon
+- Change `TabsList` from `grid-cols-4` to `grid-cols-5`
+- Add 5th `TabsTrigger value="trends"` and `TabsContent value="trends"`
 
-If a user tries to select more than 3, the app will show a friendly message such as:
+## Technical details
 
-```text
-You can select up to 3 return columns.
-```
+- **Date parsing**: try `Date.parse()` first, then a few common formats (`YYYY-MM-DD`, `MM/DD/YYYY`, `DD/MM/YYYY`); skip Excel serial date oddities by accepting only sane year ranges (1900–2100)
+- **Numeric parsing**: strip `$`, `,`, `%`, whitespace before `parseFloat`
+- **Performance**: all stats computed in single passes; no external libs needed beyond `recharts`
+- **Privacy**: raw data never leaves the browser. The AI edge function only receives **aggregated summaries** (column names, types, stats, top-10 distributions, sampled time-series points) — consistent with the existing client-side privacy rule
+- **AI payload size cap**: trim to top 10 distribution values per categorical column and downsample time-series to ≤50 points before sending
 
-### 3. Update bulk VLOOKUP results
-The bulk lookup output will include all selected return columns.
-
-Example output:
-```text
-Customer ID | Order ID | Product ID | Product Name | Price | Category
-```
-
-If a match is not found, each selected return column will show:
-
-```text
-N/A
-```
-
-### 4. Update single lookup results
-Single value lookup will also return the selected columns.
-
-Example:
-```text
-Lookup Value: P-1001
-Product Name: Laptop Stand
-Price: 29.99
-Category: Accessories
-```
-
-The success message will be adjusted so it does not become too long when multiple fields are returned.
-
-### 5. Update AI column suggestion support
-The existing AI suggestion currently returns one suggested return column. I will update the frontend logic to support multiple return columns safely:
-- If AI returns one return column, the app will use it as normal
-- If AI later returns multiple return columns, the app will use up to 3
-- The current AI function can remain backward-compatible
-
-### 6. Update the “How to Use VLOOKUP” instructions
-The instructions under the VLOOKUP tab will be updated to say users can select up to 3 return columns from Table B.
-
-## Technical approach
-
-### Files to update
-- `src/lib/vlookup.ts`
-- `src/pages/Index.tsx`
-- `src/components/LookupForm.tsx` if needed for disabled-state wording
-- Add or adapt a multi-select UI using existing UI components
-
-### Data logic changes
-The current VLOOKUP utility accepts:
-
-```ts
-returnColumn: string
-```
-
-It will be updated to support:
-
-```ts
-returnColumns: string[]
-```
-
-Bulk lookup will append all selected return fields to each row.
-
-Single lookup will return an object containing all selected return fields instead of a single string.
-
-### UI logic changes
-The state in `Index.tsx` will change from:
-
-```ts
-const [returnColumn, setReturnColumn] = useState<string>("");
-```
-
-to:
-
-```ts
-const [returnColumns, setReturnColumns] = useState<string[]>([]);
-```
-
-The VLOOKUP button will be enabled only when:
-- Table A is uploaded
-- Table B is uploaded
-- Lookup column is selected
-- Match column is selected
-- At least one return column is selected
+## Out of scope (can add later)
+- Correlation matrix between numeric columns
+- Outlier flagging
+- Forecasting / prediction
+- Multi-series overlay charts
+- Saving insights to the user's account
 
 ## Result
-Users will be able to perform a VLOOKUP and return 1, 2, or 3 columns from the matched row, making the tool more useful than Excel’s standard VLOOKUP without requiring formulas.
+A complete trend analysis tool: charts, statistics, and AI-generated insights — all consistent with the app's existing tab pattern, privacy model, and visual style.
