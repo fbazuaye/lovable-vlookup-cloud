@@ -524,6 +524,11 @@ const Index = () => {
           <TabsContent value="dataaudit">
             <DataAuditTab />
           </TabsContent>
+
+          {/* Tab 5: Trends */}
+          <TabsContent value="trends">
+            <TrendsTab />
+          </TabsContent>
         </Tabs>
       </div>
       
