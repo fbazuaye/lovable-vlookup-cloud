@@ -43,9 +43,9 @@ export const SharedFileUpload = ({ onDataLoaded, data, fileName }: SharedFileUpl
       reader.onload = (e) => {
         try {
           const arr = new Uint8Array(e.target?.result as ArrayBuffer);
-          const wb = XLSX.read(arr, { type: "array" });
+          const wb = XLSX.read(arr, { type: "array", cellDates: true });
           const sheet = wb.Sheets[wb.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet);
+          const json = XLSX.utils.sheet_to_json(sheet, { raw: false, dateNF: "yyyy-mm-dd" });
           const normalized = normalizeRows(json);
           if (normalized.length === 0) {
             toast.error("No valid rows found");

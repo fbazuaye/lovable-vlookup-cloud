@@ -271,10 +271,10 @@ export const TrendsTab = () => {
           </h2>
           <div className="grid sm:grid-cols-4 gap-3 mb-4">
             <ColumnSelector
-              columns={types.dates}
+              columns={types.dates.length > 0 ? types.dates : allColumns}
               value={dateCol}
               onChange={setDateCol}
-              label="Date column"
+              label={types.dates.length > 0 ? "Date column" : "Date column (none auto-detected — pick manually)"}
               placeholder="Pick date column"
             />
             <ColumnSelector
