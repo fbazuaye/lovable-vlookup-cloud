@@ -1,38 +1,25 @@
-# Plan: Executive Presentation — VLookup Cloud for MRS Oil Nigeria Plc
+## Problem
 
-## Deliverable
-A downloadable, professionally designed `.pptx` file (~14 slides) tailored to an oil & gas downstream audience, exported to `/mnt/documents/vlookup_cloud_mrs_oil.pptx`.
+In the Trends tab, "Pick date column" appears unclickable because the dropdown is **empty** — no columns were detected as dates, so there is nothing to select. Two causes:
 
-## Design direction
-- **Palette**: "Midnight Executive" — deep navy (#1E2761) dominant, ice blue (#CADCFC) supporting, gold accent (#F2A900) tied to MRS Oil's brand energy.
-- **Typography**: Georgia headers, Calibri body. Title slides dark; content slides light (sandwich structure).
-- **Motif**: Thin gold left-border stripe + numbered icon circles repeated across slides.
-- **Every slide has a visual element** (stat callouts, comparison columns, process flow, icon rows). No plain bullet lists.
+1. **Excel parsing**: `XLSX.read` is called without `cellDates: true`, so date cells in the synthetic logistics file come through as raw Excel **serial numbers** (e.g. `45627`). These pass `parseNumber()` and get classified as **Numeric**, never **Date**.
+2. **Detection priority**: in `detectColumnTypes`, a column is only labeled a date when `dateRatio >= 0.8 AND numRatio < 0.95`. Excel serials satisfy both number and date, but the numeric guard wins, so date columns are misclassified.
 
-## Slide outline
-1. **Cover** — "VLookup Cloud" / tagline / "Prepared for MRS Oil Nigeria Plc"
-2. **The reality of reconciliation today** — pain stats (hours lost, error rates, version chaos)
-3. **What VLookup Cloud is** — one-line definition + 3 pillars (Lookup • Clean • Insight)
-4. **Why it beats traditional Excel** — side-by-side comparison table (speed, scale, errors, security, AI, collaboration)
-5. **Core features** — 6-tile grid: Bulk VLOOKUP, Text Cleaning, Search & Replace, Data Audit, Trend Analysis, AI Column Mapping
-6. **Privacy & security** — client-side processing, no data leaves browser, auth-gated dashboard, audit logs
-7. **Use case 1 — Fleet operations** — reconciling truck dispatch logs vs depot loadings vs station receipts; detect short-deliveries, duplicate trips
-8. **Use case 2 — Stock reconciliation** — wet stock vs book stock across depots/stations; variance flagging, dip readings vs sales
-9. **Use case 3 — Accounting & finance** — bank vs ledger, customer payments vs invoices, intercompany reconciliations
-10. **Use case 4 — Procurement & vendor reconciliation** — PO vs GRN vs invoice three-way match
-11. **AI-powered insights** — plain-English trend headlines (seasonality, growth, anomalies) on uploaded data
-12. **Workflow** — 4-step process flow: Upload → Map → Reconcile → Export/Insight
-13. **ROI for MRS** — quantified callouts (time saved, error reduction, faster month-end close)
-14. **Next steps & CTA** — pilot proposal, contacts, closing
+## Fix
 
-## Technical approach
-- Use `pptxgenjs` (npm install local to `/tmp`) to generate the deck programmatically.
-- Embed icons as Unicode glyphs / shape-based circles (no external image deps).
-- After generation: convert to PDF via LibreOffice, render each slide to JPG with `pdftoppm`, visually inspect every slide for overflow/overlap/contrast, fix issues, re-render until clean.
-- Deliver via `<lov-artifact>` tag.
+**1. `src/components/SharedFileUpload.tsx`** — parse Excel with real dates:
+- Pass `{ type: "array", cellDates: true }` to `XLSX.read`.
+- Pass `{ raw: false, dateNF: "yyyy-mm-dd" }` to `sheet_to_json` so date cells become `Date` objects / ISO strings instead of serial numbers.
 
-## Files
-- Script: `/tmp/build_mrs_deck.js` (throwaway)
-- Output: `/mnt/documents/vlookup_cloud_mrs_oil.pptx`
+**2. `src/lib/trendTools.ts`** — make date detection win when appropriate:
+- In `parseDate`, also handle Excel serial numbers: if `v` is a finite number between ~20000 and ~60000, convert via `new Date(Date.UTC(1899,11,30) + v*86400000)`.
+- In `detectColumnTypes`, change the rule to: if `dateRatio >= 0.8` **and** the column header looks date-ish (`/date|day|month|time|period/i`) OR values are non-integer-looking strings with separators, classify as **date** even when `numRatio` is also high. Concretely: prefer date when `dateRatio >= 0.8` and either (a) header matches the date regex, or (b) at least one sampled value is a `Date` instance / contains `-` or `/`.
 
-Approve and I'll build it.
+**3. `src/components/TrendsTab.tsx`** — graceful fallback:
+- If `types.dates.length === 0`, pass `allColumns` to the Date column `ColumnSelector` (instead of an empty list) and show a small hint: "No date columns auto-detected — pick manually". This guarantees the dropdown is never empty when data is loaded.
+
+## Verification
+- Re-upload `vlookup_cloud_synthetic_logistics.xlsx`; `Date` (Dispatch_Log, Stock_Recon) and `Month` (Sales_Monthly) should appear under **Detected Column Types → Dates** and inside the "Pick date column" dropdown.
+- Time-series chart renders when paired with `Delivered_Litres`, `Revenue_NGN`, etc.
+
+No DB or auth changes.

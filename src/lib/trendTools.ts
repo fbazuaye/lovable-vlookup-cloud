@@ -38,6 +38,11 @@ export const parseNumber = (v: any): number | null => {
 export const parseDate = (v: any): Date | null => {
   if (isEmpty(v)) return null;
   if (v instanceof Date && !isNaN(v.getTime())) return v;
+  // Excel serial date
+  if (typeof v === "number" && Number.isFinite(v) && v >= 20000 && v <= 60000) {
+    const d = new Date(Date.UTC(1899, 11, 30) + v * 86400000);
+    if (!isNaN(d.getTime())) return d;
+  }
   const s = String(v).trim();
   // Try native parse
   let t = Date.parse(s);
@@ -65,16 +70,20 @@ export const detectColumnTypes = (data: Record<string, any>[]): ColumnTypes => {
   const cols = Object.keys(data[0]);
   const sample = data.slice(0, Math.min(data.length, 200));
 
+  const dateHeaderRe = /date|day|month|time|period|year|timestamp/i;
   for (const col of cols) {
     let nonEmpty = 0;
     let numCount = 0;
     let dateCount = 0;
+    let hasDateHint = false; // Date instance or string with date separators
     for (const row of sample) {
       const v = row[col];
       if (isEmpty(v)) continue;
       nonEmpty++;
       if (parseNumber(v) !== null) numCount++;
       if (parseDate(v) !== null) dateCount++;
+      if (v instanceof Date) hasDateHint = true;
+      else if (typeof v === "string" && /[-\/]/.test(v)) hasDateHint = true;
     }
     if (nonEmpty === 0) {
       result.categoricals.push(col);
@@ -82,10 +91,15 @@ export const detectColumnTypes = (data: Record<string, any>[]): ColumnTypes => {
     }
     const numRatio = numCount / nonEmpty;
     const dateRatio = dateCount / nonEmpty;
-    // Prefer date if mostly dates and not pure numbers
-    if (dateRatio >= 0.8 && numRatio < 0.95) result.dates.push(col);
-    else if (numRatio >= 0.8) result.numerics.push(col);
-    else result.categoricals.push(col);
+    const headerIsDate = dateHeaderRe.test(col);
+    // Prefer date when strong date signal
+    if (dateRatio >= 0.8 && (hasDateHint || headerIsDate || numRatio < 0.95)) {
+      result.dates.push(col);
+    } else if (numRatio >= 0.8) {
+      result.numerics.push(col);
+    } else {
+      result.categoricals.push(col);
+    }
   }
   return result;
 };
