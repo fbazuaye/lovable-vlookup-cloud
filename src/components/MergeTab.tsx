@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { FileUpload } from "@/components/FileUpload";
@@ -55,10 +55,38 @@ export const MergeTab = () => {
   const [fileB, setFileB] = useState("");
   const [keys, setKeys] = useState<KeyPair[]>([{ left: "", right: "" }]);
   const [join, setJoin] = useState<JoinKind>("left");
+  const [returnCols, setReturnCols] = useState<string[]>([]);
   const [results, setResults] = useState<Record<string, any>[]>([]);
 
   const colsA = useMemo(() => (tableA[0] ? Object.keys(tableA[0]) : []), [tableA]);
   const colsB = useMemo(() => (tableB[0] ? Object.keys(tableB[0]) : []), [tableB]);
+
+  // Default selection: all B columns except those used as right keys
+  const rightKeyCols = useMemo(
+    () => new Set(keys.map((k) => k.right).filter(Boolean)),
+    [keys],
+  );
+  const availableReturnCols = useMemo(
+    () => colsB.filter((c) => !rightKeyCols.has(c)),
+    [colsB, rightKeyCols],
+  );
+  // Auto-init returnCols when Table B loads / keys change
+  const availKey = availableReturnCols.join("|");
+  useEffect(() => {
+    if (!colsB.length) return;
+    setReturnCols((prev) => {
+      const valid = prev.filter((c) => availableReturnCols.includes(c));
+      if (valid.length === 0 && prev.length === 0) return availableReturnCols;
+      return valid;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [colsB, availKey]);
+
+  const toggleReturnCol = (col: string) => {
+    setReturnCols((prev) =>
+      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col],
+    );
+  };
 
   const handleFile = (file: File, which: "A" | "B") => {
     const isExcel = /\.(xlsx|xls)$/i.test(file.name);
@@ -139,17 +167,19 @@ export const MergeTab = () => {
     // Track which B rows were matched (for right/full join)
     const matchedB = new Set<string>();
 
-    // Suffix B columns that collide with A columns (except the right key columns,
-    // which we keep separate so the user can see both sides)
-    const collidingCols = new Set<string>();
+    // Only include user-selected B columns (Power Query "expand" step)
+    const selectedB = returnCols.length ? returnCols : availableReturnCols;
+
+    // Suffix B columns that collide with A columns
     const aColSet = new Set(colsA);
-    colsB.forEach((c) => {
+    const collidingCols = new Set<string>();
+    selectedB.forEach((c) => {
       if (aColSet.has(c)) collidingCols.add(c);
     });
     const renameB = (col: string) => (collidingCols.has(col) ? `${col} (B)` : col);
 
     const emptyA = Object.fromEntries(colsA.map((c) => [c, ""]));
-    const emptyB = Object.fromEntries(colsB.map((c) => [renameB(c), ""]));
+    const emptyB = Object.fromEntries(selectedB.map((c) => [renameB(c), ""]));
 
     const merged: Record<string, any>[] = [];
 
@@ -160,8 +190,8 @@ export const MergeTab = () => {
         matchedB.add(key);
         matches.forEach((bRow) => {
           const out: Record<string, any> = { ...aRow };
-          Object.entries(bRow).forEach(([c, v]) => {
-            out[renameB(c)] = v;
+          selectedB.forEach((c) => {
+            out[renameB(c)] = bRow[c];
           });
           merged.push(out);
         });
@@ -170,17 +200,13 @@ export const MergeTab = () => {
       }
     });
 
-    if (join === "inner") {
-      // Already correct: only rows with matches were pushed
-    }
-
     if (join === "right" || join === "full") {
       tableB.forEach((bRow) => {
         const key = buildCompositeKey(bRow, rightKeys);
         if (matchedB.has(key)) return;
         const out: Record<string, any> = { ...emptyA };
-        Object.entries(bRow).forEach(([c, v]) => {
-          out[renameB(c)] = v;
+        selectedB.forEach((c) => {
+          out[renameB(c)] = bRow[c];
         });
         merged.push(out);
       });
@@ -312,7 +338,62 @@ export const MergeTab = () => {
             >
               <Plus className="h-4 w-4" /> Add matching field
             </Button>
+          </div>
 
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-medium text-foreground">
+                Step 4 — Columns to return from Table B ({returnCols.length}/{availableReturnCols.length})
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReturnCols(availableReturnCols)}
+                >
+                  Select all
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReturnCols([])}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              Pick which Table B columns get added to Table A (matching key columns are excluded automatically).
+            </p>
+            <div className="rounded-md border border-border bg-card p-3 max-h-56 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {availableReturnCols.length === 0 && (
+                <p className="text-sm text-muted-foreground col-span-full">
+                  No Table B columns available — select matching fields first.
+                </p>
+              )}
+              {availableReturnCols.map((c) => {
+                const selected = returnCols.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleReturnCol(c)}
+                    className={`text-left rounded-md px-3 py-2 text-sm transition-colors border ${
+                      selected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {selected ? "✓ " : ""}{c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-4 mb-2">
             <div className="space-y-2 min-w-[200px]">
               <Label className="text-sm font-medium text-foreground">Join type</Label>
               <Select value={join} onValueChange={(v) => setJoin(v as JoinKind)}>
