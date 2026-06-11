@@ -337,7 +337,62 @@ export const MergeTab = () => {
             >
               <Plus className="h-4 w-4" /> Add matching field
             </Button>
+          </div>
 
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-medium text-foreground">
+                Step 4 — Columns to return from Table B ({returnCols.length}/{availableReturnCols.length})
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReturnCols(availableReturnCols)}
+                >
+                  Select all
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReturnCols([])}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              Pick which Table B columns get added to Table A (matching key columns are excluded automatically).
+            </p>
+            <div className="rounded-md border border-border bg-card p-3 max-h-56 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {availableReturnCols.length === 0 && (
+                <p className="text-sm text-muted-foreground col-span-full">
+                  No Table B columns available — select matching fields first.
+                </p>
+              )}
+              {availableReturnCols.map((c) => {
+                const selected = returnCols.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleReturnCol(c)}
+                    className={`text-left rounded-md px-3 py-2 text-sm transition-colors border ${
+                      selected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {selected ? "✓ " : ""}{c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-4 mb-2">
             <div className="space-y-2 min-w-[200px]">
               <Label className="text-sm font-medium text-foreground">Join type</Label>
               <Select value={join} onValueChange={(v) => setJoin(v as JoinKind)}>
