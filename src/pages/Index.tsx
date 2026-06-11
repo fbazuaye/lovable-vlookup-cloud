@@ -359,9 +359,12 @@ const Index = () => {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="vlookup" className="mb-8">
-          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 h-auto sm:h-12 mb-6">
+          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-6 h-auto sm:h-12 mb-6">
             <TabsTrigger value="vlookup" className="gap-2 text-xs sm:text-sm">
               <Search className="h-4 w-4 hidden sm:inline" /> VLOOKUP
+            </TabsTrigger>
+            <TabsTrigger value="merge" className="gap-2 text-xs sm:text-sm">
+              <GitMerge className="h-4 w-4 hidden sm:inline" /> Merge
             </TabsTrigger>
             <TabsTrigger value="textclean" className="gap-2 text-xs sm:text-sm">
               <FileText className="h-4 w-4 hidden sm:inline" /> Text & Clean
