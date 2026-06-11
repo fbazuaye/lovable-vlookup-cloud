@@ -7,7 +7,7 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector, MultiColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3, TrendingUp } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3, TrendingUp, GitMerge } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/useAuth";
