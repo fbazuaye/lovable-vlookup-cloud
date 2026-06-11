@@ -55,10 +55,37 @@ export const MergeTab = () => {
   const [fileB, setFileB] = useState("");
   const [keys, setKeys] = useState<KeyPair[]>([{ left: "", right: "" }]);
   const [join, setJoin] = useState<JoinKind>("left");
+  const [returnCols, setReturnCols] = useState<string[]>([]);
   const [results, setResults] = useState<Record<string, any>[]>([]);
 
   const colsA = useMemo(() => (tableA[0] ? Object.keys(tableA[0]) : []), [tableA]);
   const colsB = useMemo(() => (tableB[0] ? Object.keys(tableB[0]) : []), [tableB]);
+
+  // Default selection: all B columns except those used as right keys
+  const rightKeyCols = useMemo(
+    () => new Set(keys.map((k) => k.right).filter(Boolean)),
+    [keys],
+  );
+  const availableReturnCols = useMemo(
+    () => colsB.filter((c) => !rightKeyCols.has(c)),
+    [colsB, rightKeyCols],
+  );
+  // Auto-init returnCols when Table B loads / keys change
+  useMemo(() => {
+    if (!colsB.length) return;
+    setReturnCols((prev) => {
+      const valid = prev.filter((c) => availableReturnCols.includes(c));
+      if (valid.length === 0 && prev.length === 0) return availableReturnCols;
+      return valid;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [colsB, availableReturnCols.join("|")]);
+
+  const toggleReturnCol = (col: string) => {
+    setReturnCols((prev) =>
+      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col],
+    );
+  };
 
   const handleFile = (file: File, which: "A" | "B") => {
     const isExcel = /\.(xlsx|xls)$/i.test(file.name);
