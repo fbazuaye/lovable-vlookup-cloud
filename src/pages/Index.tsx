@@ -20,6 +20,7 @@ import { TextCleanTab } from "@/components/TextCleanTab";
 import { SearchReplaceTab } from "@/components/SearchReplaceTab";
 import { DataAuditTab } from "@/components/DataAuditTab";
 import { TrendsTab } from "@/components/TrendsTab";
+import { MergeTab } from "@/components/MergeTab";
 
 const useIsIos = () => {
   const [isIos, setIsIos] = useState(false);
