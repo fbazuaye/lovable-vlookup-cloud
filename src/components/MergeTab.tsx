@@ -71,7 +71,8 @@ export const MergeTab = () => {
     [colsB, rightKeyCols],
   );
   // Auto-init returnCols when Table B loads / keys change
-  useMemo(() => {
+  const availKey = availableReturnCols.join("|");
+  useEffect(() => {
     if (!colsB.length) return;
     setReturnCols((prev) => {
       const valid = prev.filter((c) => availableReturnCols.includes(c));
@@ -79,7 +80,7 @@ export const MergeTab = () => {
       return valid;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [colsB, availableReturnCols.join("|")]);
+  }, [colsB, availKey]);
 
   const toggleReturnCol = (col: string) => {
     setReturnCols((prev) =>
