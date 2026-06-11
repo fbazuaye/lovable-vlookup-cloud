@@ -7,7 +7,7 @@ import { TablePreview } from "@/components/TablePreview";
 import { ColumnSelector, MultiColumnSelector } from "@/components/ColumnSelector";
 import { LookupForm } from "@/components/LookupForm";
 import { Button } from "@/components/ui/button";
-import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3, TrendingUp } from "lucide-react";
+import { Download, InfoIcon, Smartphone, Share, X, Sun, Moon, LogIn, LogOut, Shield, User, Search, FileText, BarChart3, TrendingUp, GitMerge } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ import { TextCleanTab } from "@/components/TextCleanTab";
 import { SearchReplaceTab } from "@/components/SearchReplaceTab";
 import { DataAuditTab } from "@/components/DataAuditTab";
 import { TrendsTab } from "@/components/TrendsTab";
+import { MergeTab } from "@/components/MergeTab";
 
 const useIsIos = () => {
   const [isIos, setIsIos] = useState(false);
@@ -358,9 +359,12 @@ const Index = () => {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="vlookup" className="mb-8">
-          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 h-auto sm:h-12 mb-6">
+          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-6 h-auto sm:h-12 mb-6">
             <TabsTrigger value="vlookup" className="gap-2 text-xs sm:text-sm">
               <Search className="h-4 w-4 hidden sm:inline" /> VLOOKUP
+            </TabsTrigger>
+            <TabsTrigger value="merge" className="gap-2 text-xs sm:text-sm">
+              <GitMerge className="h-4 w-4 hidden sm:inline" /> Merge
             </TabsTrigger>
             <TabsTrigger value="textclean" className="gap-2 text-xs sm:text-sm">
               <FileText className="h-4 w-4 hidden sm:inline" /> Text & Clean
@@ -508,6 +512,11 @@ const Index = () => {
                 <TablePreview data={results} title="" maxRows={10} />
               </div>
             )}
+          </TabsContent>
+
+          {/* Tab: Merge */}
+          <TabsContent value="merge">
+            <MergeTab />
           </TabsContent>
 
           {/* Tab 2: Text & Clean */}
