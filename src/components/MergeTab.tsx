@@ -166,17 +166,19 @@ export const MergeTab = () => {
     // Track which B rows were matched (for right/full join)
     const matchedB = new Set<string>();
 
-    // Suffix B columns that collide with A columns (except the right key columns,
-    // which we keep separate so the user can see both sides)
-    const collidingCols = new Set<string>();
+    // Only include user-selected B columns (Power Query "expand" step)
+    const selectedB = returnCols.length ? returnCols : availableReturnCols;
+
+    // Suffix B columns that collide with A columns
     const aColSet = new Set(colsA);
-    colsB.forEach((c) => {
+    const collidingCols = new Set<string>();
+    selectedB.forEach((c) => {
       if (aColSet.has(c)) collidingCols.add(c);
     });
     const renameB = (col: string) => (collidingCols.has(col) ? `${col} (B)` : col);
 
     const emptyA = Object.fromEntries(colsA.map((c) => [c, ""]));
-    const emptyB = Object.fromEntries(colsB.map((c) => [renameB(c), ""]));
+    const emptyB = Object.fromEntries(selectedB.map((c) => [renameB(c), ""]));
 
     const merged: Record<string, any>[] = [];
 
@@ -187,8 +189,8 @@ export const MergeTab = () => {
         matchedB.add(key);
         matches.forEach((bRow) => {
           const out: Record<string, any> = { ...aRow };
-          Object.entries(bRow).forEach(([c, v]) => {
-            out[renameB(c)] = v;
+          selectedB.forEach((c) => {
+            out[renameB(c)] = bRow[c];
           });
           merged.push(out);
         });
@@ -197,17 +199,13 @@ export const MergeTab = () => {
       }
     });
 
-    if (join === "inner") {
-      // Already correct: only rows with matches were pushed
-    }
-
     if (join === "right" || join === "full") {
       tableB.forEach((bRow) => {
         const key = buildCompositeKey(bRow, rightKeys);
         if (matchedB.has(key)) return;
         const out: Record<string, any> = { ...emptyA };
-        Object.entries(bRow).forEach(([c, v]) => {
-          out[renameB(c)] = v;
+        selectedB.forEach((c) => {
+          out[renameB(c)] = bRow[c];
         });
         merged.push(out);
       });
