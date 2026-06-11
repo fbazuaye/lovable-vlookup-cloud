@@ -514,6 +514,11 @@ const Index = () => {
             )}
           </TabsContent>
 
+          {/* Tab: Merge */}
+          <TabsContent value="merge">
+            <MergeTab />
+          </TabsContent>
+
           {/* Tab 2: Text & Clean */}
           <TabsContent value="textclean">
             <TextCleanTab />
